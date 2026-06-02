@@ -32,9 +32,10 @@ public class ProductController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice) {
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String sort) {
 
-        Page<Product> pageResult = productService.pageList(page, size, name, categoryId, minPrice, maxPrice);
+        Page<Product> pageResult = productService.pageList(page, size, name, categoryId, minPrice, maxPrice, sort);
 
         Map<String, Object> result = new HashMap<>();
         result.put("list", pageResult.getRecords());
@@ -108,7 +109,7 @@ public class ProductController {
      * 获取热门商品
      */
     @GetMapping("/hot")
-    public Result<List<Product>> hotProducts(@RequestParam(defaultValue = "10") Integer limit) {
+    public Result<List<Product>> hotProducts(@RequestParam(defaultValue = "12") Integer limit) {
         List<Product> list = productService.getHotProducts(limit);
         return Result.success(list);
     }

@@ -34,3 +34,8 @@ export function confirmOrder(id) {
 export function deleteOrder(id) {
   return request.delete(`/order/${id}`)
 }
+
+// 获取当前用户各状态订单数量（用于个人中心红点）
+export function getMyOrderStats() {
+  return request.get('/order/my-statistics')
+}

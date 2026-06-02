@@ -15,14 +15,14 @@ import java.util.List;
 public interface ProductMapper extends BaseMapper<Product> {
 
     /**
-     * 查询热门商品(按销量排序)
+     * 查询热门商品(按销量 + 评分综合排序)
      */
     @Select("SELECT p.*, c.name as categoryName, IFNULL(o.salesCount, 0) as salesCount " +
             "FROM t_product p " +
             "LEFT JOIN t_category c ON p.category_id = c.id " +
             "LEFT JOIN (SELECT product_id, SUM(quantity) as salesCount FROM t_order_item GROUP BY product_id) o " +
             "ON p.id = o.product_id " +
-            "ORDER BY salesCount DESC " +
+            "ORDER BY IFNULL(o.salesCount, 0) DESC, IFNULL(p.avg_rating, 0) DESC, p.review_count DESC " +
             "LIMIT #{limit}")
     List<Product> selectHotProducts(@Param("limit") Integer limit);
 

@@ -12,6 +12,7 @@ import com.char1234.mapper.OrderItemMapper;
 import com.char1234.mapper.OrderMapper;
 import com.char1234.mapper.ProductMapper;
 import com.char1234.mapper.ProductReviewMapper;
+import com.char1234.service.CartService;
 import com.char1234.service.OrderService;
 import com.char1234.service.ProductService;
 import com.char1234.service.UserAddressService;
@@ -59,6 +60,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private ProductMapper productMapper;
+
+    @Autowired
+    private CartService cartService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -132,6 +136,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
             product.setStock(product.getStock() - quantity);
             productService.updateById(product);
+        }
+
+        // 下单成功后清除购物车中已购商品（不影响订单创建）
+        try {
+            for (Map<String, Object> item : items) {
+                Long productId = Long.valueOf(item.get("productId").toString());
+                cartService.removeFromCart(userId, productId);
+            }
+        } catch (Exception ignored) {
+            // 购物车清除失败不影响订单
         }
 
         return order;

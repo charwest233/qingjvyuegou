@@ -69,6 +69,11 @@
       </div>
     </section>
 
+    <!-- AI 智能推荐 -->
+    <section class="mb-8">
+      <RagSearch />
+    </section>
+
     <!-- 热门推荐 -->
     <section>
       <div class="flex items-center justify-between mb-6">
@@ -101,6 +106,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Smartphone, Monitor, Wind, Palette, Apple, Heart, Coffee } from 'lucide-vue-next'
 import ProductCard from '@/components/ProductCard.vue'
+import RagSearch from '@/components/RagSearch.vue'
 import { useProductStore } from '@/stores/product'
 
 const router = useRouter()

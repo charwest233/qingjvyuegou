@@ -17,3 +17,8 @@ export function getHotProducts() {
 export function getCategories() {
   return request.get('/category/list')
 }
+
+// RAG 模糊搜索（自然语言智能推荐）
+export function getRagSearch(query, limit = 8) {
+  return request.get('/product/rag-search', { params: { q: query, limit } })
+}

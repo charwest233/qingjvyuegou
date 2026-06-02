@@ -1,5 +1,6 @@
 package com.char1234.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.char1234.common.Result;
 import com.char1234.context.JwtContextHolder;
@@ -184,6 +185,24 @@ public class OrderController {
     @GetMapping("/statistics")
     public Result<Map<String, Object>> statistics() {
         return Result.success(orderService.getOrderStatistics());
+    }
+
+    /**
+     * 获取当前登录用户的各状态订单数量（用于个人中心红点）
+     */
+    @GetMapping("/my-statistics")
+    public Result<Map<String, Object>> myStatistics() {
+        JwtContextHolder.Context ctx = JwtContextHolder.get();
+        if (ctx == null || !ctx.isMpUser()) {
+            return Result.error(403, "未登录");
+        }
+        Long userId = ctx.principalId();
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("pending", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 0)));
+        stats.put("paid", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 1)));
+        stats.put("shipped", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 2)));
+        stats.put("completed", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 3)));
+        return Result.success(stats);
     }
 
     private static boolean canAccessOrder(Order order, JwtContextHolder.Context ctx) {

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 商品 Service 实现类
@@ -24,7 +25,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public Page<Product> pageList(Integer page, Integer size, String name, Long categoryId,
-                                  BigDecimal minPrice, BigDecimal maxPrice) {
+                                  BigDecimal minPrice, BigDecimal maxPrice, String sort) {
         Page<Product> pageParam = new Page<>(page, size);
         
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
@@ -47,8 +48,22 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             wrapper.le(Product::getPrice, maxPrice);
         }
         
-        // 按创建时间倒序
-        wrapper.orderByDesc(Product::getCreateTime);
+        // 动态排序
+        if (sort == null || "default".equals(sort)) {
+            // 综合排序：按销量降序 → 评分降序 → 评价数降序
+            wrapper.orderByDesc(Product::getSalesCount);
+            wrapper.orderByDesc(Product::getAvgRating);
+            wrapper.orderByDesc(Product::getReviewCount);
+        } else if ("price_asc".equals(sort)) {
+            wrapper.orderByAsc(Product::getPrice);
+        } else if ("price_desc".equals(sort)) {
+            wrapper.orderByDesc(Product::getPrice);
+        } else if ("sales".equals(sort)) {
+            wrapper.orderByDesc(Product::getSalesCount);
+        } else {
+            // 默认按创建时间降序
+            wrapper.orderByDesc(Product::getCreateTime);
+        }
         
         return page(pageParam, wrapper);
     }

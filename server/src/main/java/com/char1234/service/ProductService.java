@@ -16,7 +16,7 @@ public interface ProductService extends IService<Product> {
      * 分页查询商品列表
      */
     Page<Product> pageList(Integer page, Integer size, String name, Long categoryId,
-                           BigDecimal minPrice, BigDecimal maxPrice);
+                           BigDecimal minPrice, BigDecimal maxPrice, String sort);
 
     /**
      * 查询热门商品

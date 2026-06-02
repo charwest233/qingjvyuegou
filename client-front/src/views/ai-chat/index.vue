@@ -239,7 +239,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, onMounted, nextTick, watch, triggerRef } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -252,7 +252,7 @@ const router = useRouter()
 
 // 状态
 const inputText = ref('')
-const messages = shallowRef([])
+const messages = ref([])
 const sessions = ref([])
 const modelList = ref([])
 const currentModel = ref('deepseek-ai/DeepSeek-V3')
@@ -328,7 +328,6 @@ async function loadMessages(sessionId) {
     const res = await listMessages(sessionId)
     if (res.code === 200) {
       messages.value = res.data || []
-      triggerRef(messages)
     }
   } catch (err) {
     console.error('加载消息失败:', err)
@@ -448,8 +447,7 @@ async function handleSend() {
 
   // 添加占位 AI 消息
   const aiMsg = { id: Date.now() + 1, role: 'assistant', content: '' }
-  messages.value.push(aiMsg)
-  triggerRef(messages)
+  messages.value = [...messages.value, aiMsg]
   isStreaming.value = true
 
   await nextTick()
@@ -486,14 +484,14 @@ async function handleSend() {
           const data = line.startsWith('data: ') ? line.substring(6) : line.substring(5)
           if (currentEvent === 'message') {
             aiMsg.content += data
-            // 触发响应式更新（浅响应式，性能优化）
-            triggerRef(messages)
+            // 替换数组引用触发深层响应更新
+            messages.value = [...messages.value]
             scrollToBottomThrottled()
           } else if (currentEvent === 'done') {
             // 流结束
           } else if (currentEvent === 'error') {
             aiMsg.content = data || '抱歉，AI回复出错了，请稍后再试。'
-            triggerRef(messages)
+            messages.value = [...messages.value]
           }
         }
       }
@@ -504,7 +502,7 @@ async function handleSend() {
     } else {
       console.error('AI流式请求失败:', err)
       aiMsg.content = '抱歉，网络连接出错了，请稍后再试。'
-      triggerRef(messages)
+      messages.value = [...messages.value]
     }
   } finally {
     isStreaming.value = false
@@ -564,6 +562,12 @@ onMounted(async () => {
   if (sessionId) {
     currentSessionId.value = sessionId
     await loadMessages(sessionId)
+  } else if (sessions.value.length > 0) {
+    // 无指定会话时，自动衔接最近一次对话
+    const lastSession = sessions.value[0]
+    currentSessionId.value = lastSession.id
+    await router.replace({ name: 'AiChatSession', params: { id: lastSession.id } })
+    await loadMessages(lastSession.id)
   }
 })
 </script>

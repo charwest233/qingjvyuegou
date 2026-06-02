@@ -35,7 +35,17 @@
             :to="{ name: 'Orders', query: { status: tab.status } }"
             class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <component :is="tab.icon" class="w-6 h-6" :class="tab.color" />
+            <div class="relative">
+              <component :is="tab.icon" class="w-6 h-6" :class="tab.color" />
+              <!-- 红点角标（已完成不显示，贴近图标右下） -->
+              <span
+                v-if="tab.status !== 3 && orderStats[tab.statKey] > 0"
+                class="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] bg-red-500 text-white text-[10px] font-bold
+                       flex items-center justify-center rounded-full px-0.5 leading-none shadow"
+              >
+                {{ orderStats[tab.statKey] }}
+              </span>
+            </div>
             <span class="text-xs text-gray-600">{{ tab.label }}</span>
           </router-link>
         </div>
@@ -105,22 +115,35 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { User, CreditCard, Package, Truck, Star, MapPin, Heart, MessageSquareText, Settings, LogOut } from 'lucide-vue-next'
 import { getUser } from '@/utils/auth'
+import { getMyOrderStats } from '@/api/order'
 import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 const isLoggedIn = computed(() => !!getUser())
 const userInfo = computed(() => getUser())
+const orderStats = ref({ pending: 0, paid: 0, shipped: 0, completed: 0 })
 
 const orderTabs = [
-  { status: 0, label: '待支付', icon: CreditCard, color: 'text-functional-warning' },
-  { status: 1, label: '已支付', icon: Package, color: 'text-functional-info' },
-  { status: 2, label: '已发货', icon: Truck, color: 'text-primary' },
-  { status: 3, label: '已完成', icon: Star, color: 'text-functional-success' }
+  { status: 0, label: '待支付', icon: CreditCard, color: 'text-functional-warning', statKey: 'pending' },
+  { status: 1, label: '已支付', icon: Package, color: 'text-functional-info', statKey: 'paid' },
+  { status: 2, label: '已发货', icon: Truck, color: 'text-primary', statKey: 'shipped' },
+  { status: 3, label: '已完成', icon: Star, color: 'text-functional-success', statKey: 'completed' }
 ]
+
+async function loadOrderStats() {
+  try {
+    const res = await getMyOrderStats()
+    if (res.code === 200) {
+      orderStats.value = res.data || { pending: 0, paid: 0, shipped: 0, completed: 0 }
+    }
+  } catch (err) {
+    console.error('加载订单统计失败:', err)
+  }
+}
 
 async function handleLogout() {
   try {
@@ -135,4 +158,10 @@ async function handleLogout() {
     // 用户取消
   }
 }
+
+onMounted(() => {
+  if (isLoggedIn.value) {
+    loadOrderStats()
+  }
+})
 </script>

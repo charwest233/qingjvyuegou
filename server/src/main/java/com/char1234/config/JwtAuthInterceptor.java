@@ -90,7 +90,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
         if ("/api/category/list".equals(path) || "/api/category/tree".equals(path)) {
             return true;
         }
-        if ("/api/product/list".equals(path) || "/api/product/hot".equals(path)) {
+        if ("/api/product/list".equals(path) || "/api/product/hot".equals(path) || "/api/product/rag-search".equals(path)) {
             return true;
         }
         if (path.matches("^/api/product/\\d+$")) {
@@ -168,6 +168,9 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                     return false;
                 }
                 if ("GET".equals(method) && "/api/order/list".equals(path)) {
+                    return true;
+                }
+                if ("GET".equals(method) && "/api/order/my-statistics".equals(path)) {
                     return true;
                 }
                 if ("GET".equals(method) && path.matches("^/api/order/\\d+$")) {

@@ -2,9 +2,14 @@
   <router-link
     :to="`/product/${product.id}`"
     class="block bg-white rounded-xl overflow-hidden shadow-sm card-hover group cursor-pointer"
+    :class="listMode ? 'flex flex-row' : ''"
   >
     <!-- 商品图片 -->
-    <div class="aspect-square bg-gray-50 relative overflow-hidden">
+    <div
+      :class="listMode
+        ? 'w-24 h-24 shrink-0 bg-gray-50 relative overflow-hidden'
+        : 'aspect-square bg-gray-50 relative overflow-hidden'"
+    >
       <img
         v-if="product.mainImage"
         :src="product.mainImage"
@@ -17,7 +22,7 @@
     </div>
 
     <!-- 商品信息 -->
-    <div class="p-3">
+    <div :class="listMode ? 'flex-1 p-3 flex flex-col justify-center' : 'p-3'">
       <h3 class="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-tight">
         {{ product.name }}
       </h3>
@@ -40,6 +45,10 @@ defineProps({
   product: {
     type: Object,
     required: true
+  },
+  listMode: {
+    type: Boolean,
+    default: false
   }
 })
 </script>

@@ -62,31 +62,33 @@
       <Package class="w-16 h-16 mx-auto text-gray-300 mb-4" />
       <p class="text-gray-400">暂无商品</p>
     </div>
-    <div
-      v-else
-      :class="viewMode === 'grid'
-        ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
-        : 'space-y-4'"
-    >
-      <ProductCard
-        v-for="product in products"
-        :key="product.id"
-        :product="product"
-        :class="viewMode === 'list' ? 'flex !flex-row' : ''"
-      />
-    </div>
+    <template v-else>
+      <!-- 商品网格 -->
+      <div
+        :class="viewMode === 'grid'
+          ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+          : 'space-y-4'"
+      >
+        <ProductCard
+          v-for="product in products"
+          :key="product.id"
+          :product="product"
+          :list-mode="viewMode === 'list'"
+        />
+      </div>
 
-    <!-- 分页 -->
-    <div v-if="totalPages > 1" class="flex justify-center mt-8">
-      <el-pagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="total"
-        layout="prev, pager, next"
-        background
-        @current-change="loadProducts"
-      />
-    </div>
+      <!-- 底部翻页 -->
+      <div v-if="totalPages > 1" class="flex justify-center mt-6 mb-4">
+        <el-pagination
+          v-model:current-page="currentPage"
+          :page-size="pageSize"
+          :total="total"
+          layout="total, prev, pager, next"
+          background
+          @current-change="loadProducts"
+        />
+      </div>
+    </template>
   </div>
 </template>
 

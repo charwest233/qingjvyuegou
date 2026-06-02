@@ -235,7 +235,6 @@ import { ArrowLeft, ChevronRight, Heart, Minus, Plus, ShoppingCart, Image, FileT
 import { ElMessage } from 'element-plus'
 import { getProductDetail } from '@/api/product'
 import { addFavorite, removeFavorite, getFavorites } from '@/api/user'
-import { toggleCartItem, toggleCartAll } from '@/api/cart'
 import { getProductReviews } from '@/api/review'
 import { formatPrice, formatTime } from '@/utils/format'
 import { isLoggedIn } from '@/utils/auth'
@@ -336,27 +335,15 @@ async function buyNow() {
     router.push({ name: 'Login', query: { redirect: route.fullPath } })
     return
   }
-  // 修正：先检查购物车中是否已存在该商品，若存在则直接设置数量，避免累加 bug
-  const existingItem = cartStore.items.find(i => i.productId === product.value.id)
-  let success
-  if (existingItem) {
-    await cartStore.updateQuantity(product.value.id, quantity.value)
-    success = true
-  } else {
-    success = await cartStore.add(product.value.id, quantity.value)
-  }
-  if (!success) {
-    ElMessage.error('操作失败，请重试')
-    return
-  }
-  try {
-    await toggleCartAll(false)
-    await toggleCartItem(product.value.id, true)
-    await cartStore.loadCart()
-  } catch (err) {
-    console.error('选择商品失败:', err)
-  }
-  router.push({ name: 'Checkout' })
+  // 立即购买：直接跳转下单页，跳过购物车
+  router.push({
+    name: 'Checkout',
+    query: {
+      directBuy: '1',
+      productId: product.value.id,
+      quantity: quantity.value
+    }
+  })
 }
 
 onMounted(() => {

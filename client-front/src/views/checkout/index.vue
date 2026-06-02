@@ -95,15 +95,17 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { MapPin, Package } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import AddressPicker from '@/components/AddressPicker.vue'
 import { useCartStore } from '@/stores/cart'
 import { createOrder } from '@/api/order'
 import { getUserAddresses } from '@/api/user'
+import { getProductDetail } from '@/api/product'
 import { formatPrice } from '@/utils/format'
 
+const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
 
@@ -111,11 +113,20 @@ const showAddressPicker = ref(false)
 const selectedAddress = ref(null)
 const submitting = ref(false)
 
+// 直接购买模式（不经过购物车）
+const isDirectBuy = computed(() => route.query.directBuy === '1')
+const directBuyItem = ref(null)
+
 const cartItems = computed(() => {
+  if (isDirectBuy.value && directBuyItem.value) {
+    return [directBuyItem.value]
+  }
   return cartStore.items.filter(item => item.selected === 1)
 })
 
-const totalAmount = computed(() => cartStore.selectedTotal)
+const totalAmount = computed(() => {
+  return cartItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+})
 
 const canSubmit = computed(() => {
   return selectedAddress.value && cartItems.value.length > 0 && !submitting.value
@@ -140,8 +151,10 @@ async function submitOrder() {
     const res = await createOrder(orderData)
     if (res.code === 200) {
       ElMessage.success('订单提交成功')
-      // 清空已购买的购物车项
-      await cartStore.loadCart()
+      if (!isDirectBuy.value) {
+        // 购物车模式：重新加载购物车（后端已清除已购商品）
+        await cartStore.loadCart()
+      }
       router.push({ name: 'Orders' })
     }
   } catch (err) {
@@ -159,18 +172,41 @@ async function loadDefaultAddress() {
       if (defaultAddr) {
         selectedAddress.value = defaultAddr
       }
-      // 若没有默认地址，selectedAddress 保持 null，显示"请选择收货地址"
     }
   } catch (err) {
     console.error('加载默认地址失败:', err)
   }
 }
 
-onMounted(() => {
-  if (cartStore.items.length === 0) {
-    cartStore.loadCart()
+async function loadDirectBuyProduct() {
+  const productId = route.query.productId
+  const quantity = parseInt(route.query.quantity) || 1
+  if (!productId) return
+  try {
+    const res = await getProductDetail(productId)
+    if (res.code === 200 && res.data) {
+      directBuyItem.value = {
+        productId: res.data.id,
+        product_id: res.data.id,
+        productName: res.data.name,
+        productImage: res.data.mainImage,
+        price: res.data.price,
+        quantity: quantity
+      }
+    }
+  } catch (err) {
+    console.error('加载直接购买商品失败:', err)
   }
-  // 自动加载默认地址（若有则自动填充，没有就显示"请选择收货地址"）
+}
+
+onMounted(() => {
+  if (isDirectBuy.value) {
+    loadDirectBuyProduct()
+  } else {
+    if (cartStore.items.length === 0) {
+      cartStore.loadCart()
+    }
+  }
   loadDefaultAddress()
 })
 </script>
