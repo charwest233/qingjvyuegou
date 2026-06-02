@@ -18,7 +18,8 @@
               <h4 class="stat-value">{{ stat.value }}</h4>
             </div>
             <div class="stat-icon">
-              <el-icon :size="24"><component :is="stat.icon" /></el-icon>
+              <el-icon :size="24">
+                <component :is="stat.icon" /></el-icon>
             </div>
           </div>
         </el-col>
@@ -292,7 +293,8 @@ const getStatusType = (status) => {
     0: 'warning',
     1: 'success',
     2: 'primary',
-    3: 'info'
+    3: 'info',
+    '-1': 'danger'
   }
   return types[status] || 'info'
 }
@@ -303,7 +305,8 @@ const getStatusText = (status) => {
     0: '待支付',
     1: '已支付',
     2: '已发货',
-    3: '已完成'
+    3: '已完成',
+    '-1': '已取消'
   }
   return texts[status] || '未知'
 }
@@ -320,10 +323,22 @@ const formatTime = (time) => {
   })
 }
 
-// 加载订单列表
+// 加载订单列表和统计数据
 const loadData = async () => {
   loading.value = true
   try {
+    // 1. 加载统计数据（实时更新统计卡片）
+    const statsRes = await orderApi.getStatistics()
+    if (statsRes) {
+      orderStats.value = [
+        { key: 'pending', label: '待支付', value: statsRes.pending || 0, icon: 'Clock' },
+        { key: 'paid', label: '已支付', value: statsRes.paid || 0, icon: 'Check' },
+        { key: 'shipped', label: '已发货', value: statsRes.shipped || 0, icon: 'Van' },
+        { key: 'completed', label: '已完成', value: statsRes.completed || 0, icon: 'CircleCheck' }
+      ]
+    }
+
+    // 2. 加载订单列表
     const params = {
       page: pagination.value.page,
       size: pagination.value.size,
@@ -411,9 +426,7 @@ const handleShipSubmit = async () => {
     loadData()
   } catch (error) {
     console.error('发货失败:', error)
-    ElMessage.success('发货成功')
-    shipDialogVisible.value = false
-    loadData()
+    ElMessage.error(error?.message || '发货失败')
   } finally {
     shipLoading.value = false
   }
@@ -436,9 +449,10 @@ const handleCancel = (row) => {
       loadData()
     } catch (error) {
       console.error('取消订单失败:', error)
-      ElMessage.success('订单已取消')
-      loadData()
+      ElMessage.error(error?.message || '取消失败')
     }
+  }).catch(() => {
+    // 用户点击"取消"按钮时不作处理
   })
 }
 

@@ -24,13 +24,14 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Home, Grid3X3, ShoppingCart, User } from 'lucide-vue-next'
+import { Home, Grid3X3, ShoppingCart, User, Bot } from 'lucide-vue-next'
 
 const route = useRoute()
 
 const tabs = [
   { path: '/', label: '首页', icon: Home },
   { path: '/product-list', label: '分类', icon: Grid3X3 },
+  { path: '/ai-chat', label: 'AI助手', icon: Bot },
   { path: '/cart', label: '购物车', icon: ShoppingCart },
   { path: '/user', label: '我的', icon: User }
 ]

@@ -101,6 +101,7 @@ import { ElMessage } from 'element-plus'
 import AddressPicker from '@/components/AddressPicker.vue'
 import { useCartStore } from '@/stores/cart'
 import { createOrder } from '@/api/order'
+import { getUserAddresses } from '@/api/user'
 import { formatPrice } from '@/utils/format'
 
 const router = useRouter()
@@ -150,9 +151,26 @@ async function submitOrder() {
   }
 }
 
+async function loadDefaultAddress() {
+  try {
+    const res = await getUserAddresses()
+    if (res.code === 200 && res.data?.length) {
+      const defaultAddr = res.data.find(a => a.isDefault === 1)
+      if (defaultAddr) {
+        selectedAddress.value = defaultAddr
+      }
+      // 若没有默认地址，selectedAddress 保持 null，显示"请选择收货地址"
+    }
+  } catch (err) {
+    console.error('加载默认地址失败:', err)
+  }
+}
+
 onMounted(() => {
   if (cartStore.items.length === 0) {
     cartStore.loadCart()
   }
+  // 自动加载默认地址（若有则自动填充，没有就显示"请选择收货地址"）
+  loadDefaultAddress()
 })
 </script>

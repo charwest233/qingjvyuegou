@@ -50,7 +50,27 @@ ALTER TABLE `t_product`
     ADD COLUMN `review_count` int DEFAULT 0 COMMENT '评价数' AFTER `avg_rating`;
 
 -- ===============================
--- 后续迁移在此追加（M003、M004...）
--- 格式：
--- -- M003: 说明
--- ALTER TABLE ...
+-- M003: 创建 AI 导购助手相关表
+-- ===============================
+CREATE TABLE IF NOT EXISTS `t_ai_session` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `title` varchar(255) DEFAULT '' COMMENT '对话标题',
+  `model` varchar(100) NOT NULL DEFAULT 'Qwen/Qwen2.5-7B-Instruct' COMMENT '使用的模型',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI对话会话';
+
+CREATE TABLE IF NOT EXISTS `t_ai_message` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `session_id` bigint NOT NULL COMMENT '会话ID',
+  `role` varchar(20) NOT NULL COMMENT '角色: user/assistant/system',
+  `content` text COMMENT '文本内容',
+  `image_url` varchar(500) DEFAULT NULL COMMENT '图片URL',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_session_id` (`session_id`),
+  CONSTRAINT `fk_message_session` FOREIGN KEY (`session_id`) REFERENCES `t_ai_session` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI对话消息';

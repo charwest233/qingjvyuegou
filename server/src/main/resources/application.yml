@@ -31,11 +31,16 @@ spring:
       max-lifetime: 1800000
       connection-timeout: 30000
 
-  # 设置上传文件大小限制
+    # 设置上传文件大小限制
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 100MB
+
+  # 静态资源
+  web:
+    resources:
+      static-locations: classpath:/static/,file:./uploads/
 
   # 禁用 Spring Boot 自动配置的数据源（防止使用内存数据库）
   sql:
@@ -65,3 +70,13 @@ wechat:
     appid: ''
     secret: ''
     mock-when-secret-empty: true
+
+# AI 导购助手 - 硅基流动配置
+ai:
+  siliconflow:
+    base-url: https://api.siliconflow.cn
+    api-key: sk-viqojgpvyuonigebqtlxjzyexdpbjzlpdmiribdywdhjmbgr
+
+# 文件上传目录
+file:
+  upload-dir: uploads

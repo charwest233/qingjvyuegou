@@ -68,6 +68,18 @@ const routes = [
     meta: { title: '设置', requiresAuth: true }
   },
   {
+    path: '/ai-chat',
+    name: 'AiChat',
+    component: () => import('@/views/ai-chat/index.vue'),
+    meta: { title: 'AI导购', requiresAuth: true }
+  },
+  {
+    path: '/ai-chat/:id',
+    name: 'AiChatSession',
+    component: () => import('@/views/ai-chat/index.vue'),
+    meta: { title: 'AI导购', requiresAuth: true }
+  },
+  {
     path: '/admin/reviews',
     name: 'AdminReviews',
     component: () => import('@/views/admin/reviews.vue'),

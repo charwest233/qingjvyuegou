@@ -183,6 +183,10 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                 return path.matches("^/api/order/\\d+/pay$") || path.matches("^/api/order/\\d+/cancel$") || path.matches("^/api/order/\\d+/confirm$");
             }
 
+            if (path.startsWith("/api/ai")) {
+                return true;
+            }
+
             return false;
         }
 
