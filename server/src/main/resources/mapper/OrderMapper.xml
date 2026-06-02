@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.char1234.mapper.OrderMapper">
+
+    <resultMap id="OrderDetailResultMap" type="com.char1234.entity.Order">
+        <id column="oid" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="status" property="status"/>
+        <result column="receiver_name" property="receiverName"/>
+        <result column="receiver_phone" property="receiverPhone"/>
+        <result column="receiver_address" property="receiverAddress"/>
+        <result column="address_id" property="addressId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="nickname" property="userName"/>
+        <result column="avatar_url" property="userAvatar"/>
+        <collection property="items" ofType="com.char1234.entity.OrderItem" columnPrefix="it_">
+            <id column="id" property="id"/>
+            <result column="order_id" property="orderId"/>
+            <result column="product_id" property="productId"/>
+            <result column="product_name" property="productName"/>
+            <result column="product_image" property="productImage"/>
+            <result column="price" property="price"/>
+            <result column="quantity" property="quantity"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectOrderById" resultMap="OrderDetailResultMap">
+        SELECT o.id                         AS oid,
+               o.order_no,
+               o.user_id,
+               o.total_amount,
+               o.status,
+               o.receiver_name,
+               o.receiver_phone,
+               o.receiver_address,
+               o.address_id,
+               o.create_time,
+               u.nickname,
+               u.avatar_url,
+               i.id                          AS it_id,
+               i.order_id                   AS it_order_id,
+               i.product_id                 AS it_product_id,
+               i.product_name               AS it_product_name,
+               i.product_image              AS it_product_image,
+               i.price                      AS it_price,
+               i.quantity                   AS it_quantity
+        FROM t_order o
+                 LEFT JOIN t_user u ON o.user_id = u.id
+                 LEFT JOIN t_order_item i ON i.order_id = o.id
+        WHERE o.id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #14B8A6;
+    --primary-light: #5EEAD4;
+    --primary-dark: #0D9488;
+    --cta: #F59E0B;
+    --cta-hover: #D97706;
+    --bg-primary: #F0FDFA;
+    --bg-light: #FFFFFF;
+    --bg-muted: #F0FDF4;
+    --text-primary: #134E4A;
+    --text-secondary: #64748B;
+    --text-white: #FFFFFF;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-lg font-medium 
+           transition-all duration-200 hover:bg-primary-dark 
+           active:scale-[0.98] cursor-pointer;
+  }
+
+  .btn-cta {
+    @apply bg-cta text-white px-6 py-3 rounded-lg font-medium 
+           transition-all duration-200 hover:bg-cta-hover 
+           active:scale-[0.98] cursor-pointer;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary text-primary px-6 py-3 rounded-lg 
+           font-medium transition-all duration-200 hover:bg-primary 
+           hover:text-white active:scale-[0.98] cursor-pointer;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-md;
+  }
+
+  .section-title {
+    @apply text-2xl font-heading font-semibold text-text-primary mb-6;
+  }
+
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .skeleton-pulse {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #5EEAD4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #14B8A6;
+}
+
+/* Smooth page transitions */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}

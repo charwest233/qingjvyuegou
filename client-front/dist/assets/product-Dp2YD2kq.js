@@ -1,0 +1,1 @@
+import{y as r}from"./index-Dd00yh3V.js";function e(t){return r.get("/product/list",{params:t})}function u(t){return r.get(`/product/${t}`)}function c(){return r.get("/product/hot")}export{u as a,e as b,c as g};

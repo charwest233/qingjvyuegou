@@ -1,0 +1,284 @@
+// ============================================
+// 青桔悦购 - 管理后台全局样式
+// ============================================
+
+@use './variables.scss' as *;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Nunito Sans', var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Rubik', var(--font-heading);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+
+p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+// Links
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-base);
+
+  &:hover {
+    color: var(--color-primary-dark);
+  }
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-light);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--color-primary);
+  }
+}
+
+// Element Plus Overrides
+.el-button {
+  font-family: 'Nunito Sans', var(--font-family);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+
+  &--primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+
+    &:hover {
+      background-color: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
+    }
+
+    &:focus {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+.el-input {
+  &__wrapper {
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 1px var(--color-border);
+
+    &:hover, &:focus {
+      box-shadow: 0 0 0 1px var(--color-primary);
+    }
+  }
+}
+
+.el-table {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  th {
+    background-color: #E6FCF5 !important;
+    font-weight: 600;
+    color: #134E4A;
+  }
+
+  td {
+    padding: var(--space-md) !important;
+  }
+
+  .cell {
+    font-size: var(--font-size-sm);
+  }
+}
+
+.el-menu {
+  border-right: none !important;
+  background-color: transparent;
+
+  .el-menu-item {
+    height: 48px;
+    line-height: 48px;
+    margin: 4px 12px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+
+    &:hover {
+      background-color: rgba(20, 184, 166, 0.08);
+    }
+
+    &.is-active {
+      background-color: rgba(20, 184, 166, 0.15);
+      color: #fff;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 20px;
+        background-color: #5EEAD4;
+        border-radius: 0 2px 2px 0;
+      }
+    }
+  }
+
+  .el-sub-menu__title {
+    height: 48px;
+    line-height: 48px;
+    margin: 4px 12px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+
+    &:hover {
+      background-color: rgba(20, 184, 166, 0.08);
+    }
+  }
+}
+
+.el-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+
+  &__header {
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__body {
+    padding: var(--space-lg);
+  }
+}
+
+.el-dialog {
+  border-radius: var(--radius-xl);
+
+  &__header {
+    padding: var(--space-lg) var(--space-xl);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__body {
+    padding: var(--space-xl);
+  }
+
+  &__footer {
+    padding: var(--space-lg) var(--space-xl);
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.el-pagination {
+  justify-content: flex-end;
+  padding: var(--space-lg) 0;
+}
+
+// Utility Classes
+.text-cta { color: var(--color-cta); }
+.text-muted { color: var(--color-text-muted); }
+.text-danger { color: var(--color-danger); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+
+.bg-white { background-color: var(--color-surface); }
+.bg-surface { background-color: var(--color-background); }
+
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+.cursor-pointer { cursor: pointer; }
+
+.transition-all {
+  transition: all var(--transition-base);
+}
+
+// Page Layout
+.page-container {
+  padding: var(--space-xl);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+
+  h2 {
+    font-size: var(--font-size-2xl);
+    font-family: 'Rubik', var(--font-heading);
+  }
+}
+
+// Status Tags
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+
+  &--success {
+    background-color: rgba(20, 184, 166, 0.1);
+    color: var(--color-success);
+  }
+
+  &--warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+  }
+
+  &--danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+  }
+
+  &--info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--color-info);
+  }
+}

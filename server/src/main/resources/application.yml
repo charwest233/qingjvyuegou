@@ -1,0 +1,67 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mall-server
+
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/db_mall?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 990427Zyh
+    hikari:
+      pool-name: HikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # 设置上传文件大小限制
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+
+  # 禁用 Spring Boot 自动配置的数据源（防止使用内存数据库）
+  sql:
+    init:
+      mode: never
+
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    # 开启驼峰命名自动转换
+    map-underscore-to-camel-case: true
+    # 开启日志打印
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # Mapper XML 文件位置
+  mapper-locations: classpath*:/mapper/**/*.xml
+  # 实体类包路径
+  type-aliases-package: com.char1234.entity
+
+# 日志配置
+logging:
+  level:
+    com.char1234: debug
+
+# 微信小程序（未配置 secret 时使用 mock openid，联调真机请填写 appid / secret）
+wechat:
+  miniapp:
+    appid: ''
+    secret: ''
+    mock-when-secret-empty: true
