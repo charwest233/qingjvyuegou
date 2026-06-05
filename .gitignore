@@ -1,5 +1,26 @@
-echo node_modules/ >> .gitignore
-echo .DS_Store >> .gitignore
-echo *.log >> .gitignore
-echo .env >> .gitignore
-echo dist/ >> .gitignore
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+
+# 环境变量（敏感信息）
+.env
+application-dev.yml
+
+# 系统文件
+.DS_Store
+
+# 日志
+*.log
+
+# IDE
+.idea/
+*.iml
+
+# Java
+target/
+*.class
+
+# 上传目录
+uploads/

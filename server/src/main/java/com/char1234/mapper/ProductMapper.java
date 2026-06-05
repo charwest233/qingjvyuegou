@@ -15,6 +15,12 @@ import java.util.List;
 public interface ProductMapper extends BaseMapper<Product> {
 
     /**
+     * 根据商品名称模糊查询
+     */
+    @Select("SELECT * FROM t_product WHERE name LIKE CONCAT('%', #{name}, '%') LIMIT 1")
+    Product selectByName(@Param("name") String name);
+
+    /**
      * 查询热门商品(按销量 + 评分综合排序)
      */
     @Select("SELECT p.*, c.name as categoryName, IFNULL(o.salesCount, 0) as salesCount " +

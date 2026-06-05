@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: mall-server
+  profiles:
+    active: dev
 
   redis:
     host: localhost
@@ -22,7 +24,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/db_mall?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: 990427Zyh
+    password: ${DB_PASSWORD}
     hikari:
       pool-name: HikariPool
       minimum-idle: 5
@@ -75,7 +77,24 @@ wechat:
 ai:
   siliconflow:
     base-url: https://api.siliconflow.cn
-    api-key: sk-viqojgpvyuonigebqtlxjzyexdpbjzlpdmiribdywdhjmbgr
+    api-key: ${SILICONFLOW_API_KEY}
+
+# LangChain4j 配置（复用 SiliconFlow 的 key）
+langchain4j:
+  open-ai:
+    chat-model:
+      base-url: ${ai.siliconflow.base-url}
+      api-key: ${ai.siliconflow.api-key}
+      model-name: deepseek-ai/DeepSeek-V3
+      temperature: 0.7
+      max-tokens: 2048
+      log-requests: false
+    streaming-chat-model:
+      base-url: ${ai.siliconflow.base-url}
+      api-key: ${ai.siliconflow.api-key}
+      model-name: deepseek-ai/DeepSeek-V3
+      temperature: 0.7
+      max-tokens: 2048
 
 # 文件上传目录
 file:

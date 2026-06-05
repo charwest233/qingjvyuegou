@@ -94,7 +94,9 @@
                 class="max-w-full max-h-48 rounded-lg mb-2 object-cover"
                 @click="previewImage(msg.imageUrl)"
               />
-              <div>{{ msg.content }}</div>
+              <!-- AI 回复支持 Markdown 渲染 -->
+              <div v-if="msg.role === 'assistant'" class="ai-markdown" v-html="renderMarkdown(msg.content)" />
+              <div v-else>{{ msg.content }}</div>
               <!-- 打字光标 -->
               <span
                 v-if="msg.role === 'assistant' && index === messages.length - 1 && isStreaming"
@@ -144,7 +146,7 @@
           v-model="inputText"
           class="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1 max-h-24 text-text-primary placeholder:text-gray-400"
           rows="1"
-          placeholder="输入你想了解的商品信息..."
+          placeholder="搜索商品、加购物车、查订单..."
           @keydown.enter.exact="handleSend"
           @input="autoResize"
         />
@@ -275,10 +277,10 @@ const canSend = computed(() => inputText.value.trim().length > 0 && !isStreaming
 
 // 推荐问题
 const suggestions = [
-  { text: '我想买一台适合听歌的耳机，有什么推荐？' },
-  { text: '送女朋友生日礼物，预算500以内买什么好？' },
-  { text: '运动时戴的蓝牙耳机，推荐几款性价比高的' },
-  { text: '学生党求推荐2000元以内的笔记本电脑' }
+  { text: '帮我把草莓加到购物车' },
+  { text: '看看我的购物车有什么' },
+  { text: '帮我搜一下蓝牙耳机，推荐几款' },
+  { text: '我想买一台性价比高的笔记本电脑' }
 ]
 
 // 方法
@@ -519,6 +521,40 @@ function stopStreaming() {
   isStreaming.value = false
 }
 
+/**
+ * 简单 Markdown → HTML 渲染（内联实现，无需额外依赖）
+ * 支持：**加粗**、*斜体*、`代码`、有序/无序列表、换行
+ */
+function renderMarkdown(text) {
+  if (!text) return ''
+  let html = text
+    // 转义 HTML 特殊字符（防止 XSS）
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // 粗体 **text**
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // 斜体 *text*
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // 行内代码 `code`
+    .replace(/`(.+?)`/g, '<code class="inline-code">$1</code>')
+    // 标题 ### text
+    .replace(/^###\s+(.+)$/gm, '<h4 class="md-h4">$1</h4>')
+    .replace(/^##\s+(.+)$/gm, '<h3 class="md-h3">$1</h3>')
+    .replace(/^#\s+(.+)$/gm, '<h2 class="md-h2">$1</h2>')
+    // 有序列表 1. / 2.
+    .replace(/^\d+\.\s+(.+)$/gm, '<li class="md-li">$1</li>')
+    // 无序列表 - / *
+    .replace(/^[-*]\s+(.+)$/gm, '<li class="md-li">$1</li>')
+    // 连续 <li> 包裹在 <ul> 中
+    .replace(/(<li class="md-li">.*?<\/li>)\n(?=<li class="md-li">)/g, '$1')
+  // 将连续 <li> 块包裹为 <ul>
+  html = html.replace(/((?:<li class="md-li">.*?<\/li>)+)/g, '<ul class="md-ul">$1</ul>')
+  // 普通换行 → <br>
+  html = html.replace(/\n/g, '<br>')
+  return html
+}
+
 function autoResize(e) {
   const el = e.target
   el.style.height = 'auto'
@@ -611,5 +647,59 @@ onMounted(async () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* AI Markdown 渲染样式 */
+.ai-markdown :deep(strong) {
+  font-weight: 600;
+  color: #0F172A;
+}
+.ai-markdown :deep(em) {
+  font-style: italic;
+  color: #475569;
+}
+.ai-markdown :deep(.inline-code) {
+  background: #F1F5F9;
+  color: #0EA5E9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: 'SF Mono', 'Menlo', monospace;
+}
+.ai-markdown :deep(.md-h2) {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin: 8px 0 4px;
+  color: #0F172A;
+}
+.ai-markdown :deep(.md-h3) {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 6px 0 3px;
+  color: #1E293B;
+}
+.ai-markdown :deep(.md-h4) {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 4px 0 2px;
+  color: #334155;
+}
+.ai-markdown :deep(.md-ul) {
+  margin: 4px 0;
+  padding-left: 18px;
+  list-style: none;
+}
+.ai-markdown :deep(.md-li) {
+  position: relative;
+  padding-left: 4px;
+  margin: 2px 0;
+  line-height: 1.5;
+}
+.ai-markdown :deep(.md-li::before) {
+  content: '•';
+  position: absolute;
+  left: -14px;
+  color: #14B8A6;
+  font-weight: 700;
 }
 </style>
