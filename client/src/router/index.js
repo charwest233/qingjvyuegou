@@ -46,6 +46,18 @@ const routes = [
         name: 'Users',
         component: () => import('@/views/user/index.vue'),
         meta: { title: '用户管理', icon: 'User' }
+      },
+      {
+        path: '/customer-service',
+        name: 'CustomerService',
+        component: () => import('@/views/customer-service/index.vue'),
+        meta: { title: '在线客服', icon: 'ChatDotRound' }
+      },
+      {
+        path: '/refunds',
+        name: 'Refunds',
+        component: () => import('@/views/refund/index.vue'),
+        meta: { title: '售后管理', icon: 'ChatDotRound' }
       }
     ]
   },

@@ -86,6 +86,17 @@
             <p class="text-xs text-gray-400 mt-1">查看我的商品评价</p>
           </div>
         </router-link>
+        <router-link to="/orders/refund/list"
+          class="bg-white rounded-2xl p-5 shadow-sm card-hover cursor-pointer group flex items-center gap-4"
+        >
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all bg-purple-100">
+            <RotateCcw class="w-6 h-6 text-purple-500" />
+          </div>
+          <div>
+            <p class="font-medium text-gray-900">售后记录</p>
+            <p class="text-xs text-gray-400 mt-1">查看退款/退货进度</p>
+          </div>
+        </router-link>
         <router-link to="/settings"
           class="bg-white rounded-2xl p-5 shadow-sm card-hover cursor-pointer group flex items-center gap-4"
         >
@@ -95,6 +106,17 @@
           <div>
             <p class="font-medium text-gray-900">设置</p>
             <p class="text-xs text-gray-400 mt-1">账户安全</p>
+          </div>
+        </router-link>
+        <router-link to="/customer-service"
+          class="bg-white rounded-2xl p-5 shadow-sm card-hover cursor-pointer group flex items-center gap-4"
+        >
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all bg-blue-100">
+            <Headset class="w-6 h-6 text-blue-500" />
+          </div>
+          <div>
+            <p class="font-medium text-gray-900">人工客服</p>
+            <p class="text-xs text-gray-400 mt-1">在线咨询</p>
           </div>
         </router-link>
         <button
@@ -116,7 +138,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { User, CreditCard, Package, Truck, Star, MapPin, Heart, MessageSquareText, Settings, LogOut } from 'lucide-vue-next'
+import { User, CreditCard, Package, Truck, Star, MapPin, Heart, MessageSquareText, Settings, LogOut, Headset, RotateCcw } from 'lucide-vue-next'
 import { getUser } from '@/utils/auth'
 import { getMyOrderStats } from '@/api/order'
 import { ElMessageBox } from 'element-plus'

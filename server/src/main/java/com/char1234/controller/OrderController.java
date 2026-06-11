@@ -188,6 +188,25 @@ public class OrderController {
     }
 
     /**
+     * 客服查询订单（根据订单号模糊搜索）
+     */
+    @GetMapping("/lookup")
+    public Result<Order> lookup(@RequestParam String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Result.error("请输入订单号");
+        }
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        wrapper.like(Order::getOrderNo, keyword.trim())
+               .last("LIMIT 1");
+        Order order = orderService.getOne(wrapper);
+        if (order == null) {
+            return Result.error("未找到相关订单");
+        }
+        return Result.success(order);
+    }
+
+    /**
      * 获取当前登录用户的各状态订单数量（用于个人中心红点）
      */
     @GetMapping("/my-statistics")

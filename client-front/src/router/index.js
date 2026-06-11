@@ -92,6 +92,31 @@ const routes = [
     meta: { title: '我的评价', requiresAuth: true }
   },
   {
+    path: '/customer-service',
+    name: 'CustomerService',
+    component: () => import('@/views/customer-service/index.vue'),
+    meta: { title: '人工客服', requiresAuth: true }
+  },
+  // 售后相关
+  {
+    path: '/orders/refund/apply/:orderId',
+    name: 'ApplyRefund',
+    component: () => import('@/views/refund/ApplyRefund.vue'),
+    meta: { title: '申请售后', requiresAuth: true }
+  },
+  {
+    path: '/orders/refund/list',
+    name: 'RefundList',
+    component: () => import('@/views/refund/RefundList.vue'),
+    meta: { title: '售后记录', requiresAuth: true }
+  },
+  {
+    path: '/orders/refund/:id',
+    name: 'RefundDetail',
+    component: () => import('@/views/refund/RefundDetail.vue'),
+    meta: { title: '售后详情', requiresAuth: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/home/index.vue')

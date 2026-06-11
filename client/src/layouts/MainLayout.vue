@@ -40,6 +40,15 @@
           <el-icon><User /></el-icon>
           <template #title>用户管理</template>
         </el-menu-item>
+
+        <el-menu-item index="/customer-service">
+          <el-icon><ChatDotRound /></el-icon>
+          <template #title>在线客服</template>
+        </el-menu-item>
+        <el-menu-item index="/refunds">
+          <el-icon><Coin /></el-icon>
+          <template #title>售后管理</template>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -178,6 +187,8 @@ import {
   Lock,
   SwitchButton,
   ShoppingBag,
+  ChatDotRound,
+  Coin,
 } from '@element-plus/icons-vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import { authApi } from '@/api/auth'

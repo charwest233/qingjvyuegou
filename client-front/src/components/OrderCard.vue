@@ -61,6 +61,15 @@
         >
           确认收货
         </button>
+        <!-- 已支付/已发货/已完成 → 申请售后 -->
+        <button
+          v-if="Number(order.status) === 1 || Number(order.status) === 2 || Number(order.status) === 3"
+          class="border border-orange-300 text-orange-500 text-sm px-3 py-1.5 rounded-lg
+                 hover:bg-orange-50 transition-all cursor-pointer"
+          @click="handleRefund(order)"
+        >
+          申请售后
+        </button>
         <!-- 已完成 → 已评价/去评价 -->
         <template v-if="Number(order.status) === 3">
           <span
@@ -117,6 +126,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Package, Clock } from 'lucide-vue-next'
 import { formatPrice, getOrderStatusText, getOrderStatusType } from '@/utils/format'
 import { getOrderReviews } from '@/api/review'
@@ -128,6 +138,7 @@ const props = defineProps({
   order: { type: Object, required: true }
 })
 
+const router = useRouter()
 const emit = defineEmits(['pay', 'cancel', 'ship', 'reviewed', 'delete'])
 
 const showReview = ref(false)
@@ -180,6 +191,10 @@ async function checkReviewStatus() {
   } catch (err) {
     // 静默失败，保持"去评价"状态
   }
+}
+
+function handleRefund(order) {
+  router.push(`/orders/refund/apply/${order.id}`)
 }
 
 function handleReview() {
