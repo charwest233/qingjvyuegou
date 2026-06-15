@@ -13,6 +13,23 @@
       <!-- 商品信息 -->
       <div class="bg-white rounded-xl p-4 shadow-sm">
         <h3 class="text-sm font-medium text-text-primary mb-3">选择商品</h3>
+        <!-- 整单退款 -->
+        <div
+          class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors mb-2"
+          :class="selectedItemId === null ? 'border-primary bg-primary/10' : 'border-gray-100 hover:border-gray-200'"
+          @click="selectFullOrder"
+        >
+          <div class="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Package class="w-6 h-6 text-primary" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-text-primary">整单退款</p>
+            <p class="text-xs text-text-secondary mt-1">{{ order.items?.length || 0 }} 件商品</p>
+          </div>
+          <div v-if="selectedItemId === null" class="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+            <Check class="w-3 h-3" />
+          </div>
+        </div>
         <div
           v-for="item in order.items" :key="item.id"
           class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
@@ -44,12 +61,15 @@
           >
             <CircleDollarSign class="w-5 h-5" :class="refundType === 1 ? 'text-primary' : 'text-text-secondary'" />
             <span class="text-xs font-medium" :class="refundType === 1 ? 'text-primary-dark' : 'text-text-secondary'">仅退款</span>
-            <span class="text-[10px] text-text-secondary">未发货订单</span>
+            <span class="text-[10px] text-text-secondary">未发货订单适用</span>
           </div>
           <div
             class="flex flex-col items-center gap-1 p-3 rounded-lg border cursor-pointer transition-colors"
-            :class="refundType === 2 ? 'border-primary bg-primary/10' : 'border-gray-100 hover:border-gray-200'"
-            @click="refundType = 2"
+            :class="[
+              refundType === 2 ? 'border-primary bg-primary/10' : 'border-gray-100 hover:border-gray-200',
+              Number(order.status) < 2 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            ]"
+            @click="selectRefundType(2)"
           >
             <Truck class="w-5 h-5" :class="refundType === 2 ? 'text-primary' : 'text-text-secondary'" />
             <span class="text-xs font-medium" :class="refundType === 2 ? 'text-primary-dark' : 'text-text-secondary'">退货退款</span>
@@ -85,9 +105,11 @@
       <button
         class="w-full py-3 rounded-xl text-sm font-medium text-white transition-colors cursor-pointer disabled:opacity-50"
         :class="submitting ? 'bg-gray-400' : 'bg-primary hover:bg-primary-dark'"
-        :disabled="!selectedItemId || !reason || submitting"
+        :disabled="selectedItemId === undefined || !reason || submitting"
         @click="handleSubmit"
       >{{ submitting ? '提交中...' : '提交申请' }}</button>
+
+      <p class="text-center text-xs text-text-secondary">整单退款的金额已自动扣除优惠券抵扣部分</p>
     </div>
   </div>
 </template>
@@ -104,29 +126,67 @@ const route = useRoute()
 const router = useRouter()
 
 const order = ref({ items: [] })
-const selectedItemId = ref(null)
+const selectedItemId = ref(null) // null=整单退款, number=单品, undefined=未选
 const refundType = ref(1)
 const reason = ref('')
 const description = ref('')
 const submitting = ref(false)
 
 const refundAmount = computed(() => {
-  if (!selectedItemId.value || !order.value.items) return 0
+  if (!order.value.items?.length) return 0
+  if (selectedItemId.value === undefined) return 0
+
+  // 整单退款：直接用订单实付金额
+  if (selectedItemId.value === null) {
+    return order.value.totalAmount || 0
+  }
+
+  // 单品退款：按价格比例分摊优惠券
   const item = order.value.items.find(i => i.id === selectedItemId.value)
-  return item ? item.price * item.quantity : 0
+  if (!item) return 0
+
+  const itemTotal = Number(item.price) * Number(item.quantity)
+  const itemsTotal = order.value.items.reduce((s, i) => s + Number(i.price) * Number(i.quantity), 0)
+
+  // 如果订单有优惠券（实付 < 原总价），按比例分摊折扣
+  const paid = Number(order.value.totalAmount) || 0
+  if (paid > 0 && itemsTotal > 0 && paid < itemsTotal) {
+    return Math.round(itemTotal * (paid / itemsTotal) * 100) / 100
+  }
+  return itemTotal
 })
 
 function selectItem(item) {
+  console.log('[ApplyRefund] selectItem', item.id, item.productName)
   selectedItemId.value = item.id
   if (Number(order.value.status) >= 2) refundType.value = 2
+  else refundType.value = 1 // 未发货只允许仅退款
+}
+
+function selectFullOrder() {
+  console.log('[ApplyRefund] selectFullOrder')
+  selectedItemId.value = null
+  if (Number(order.value.status) >= 2) refundType.value = 2
+  else refundType.value = 1 // 未发货只允许仅退款
+}
+
+function selectRefundType(type) {
+  if (type === 2 && Number(order.value.status) < 2) {
+    ElMessage.warning('订单未发货，不能选择退货退款')
+    return
+  }
+  refundType.value = type
 }
 
 async function handleSubmit() {
-  if (!selectedItemId.value || !reason.value) return
+  if (selectedItemId.value === undefined || !reason.value) return
   submitting.value = true
+  const orderItemId = selectedItemId.value
+  console.log('[ApplyRefund] submitting:', { orderId: order.value.id, orderItemId, type: refundType.value })
   try {
     const res = await applyRefund({
-      orderId: order.value.id, orderItemId: selectedItemId.value,
+      orderId: order.value.id,
+      orderItemId, // null=整单退款, number=单品
       type: refundType.value, reason: reason.value, description: description.value
     })
     if (res.code === 200) {
@@ -142,7 +202,17 @@ onMounted(async () => {
   if (!orderId) { ElMessage.error('参数错误'); return }
   try {
     const res = await getOrderDetail(orderId)
-    if (res.code === 200 && res.data) order.value = res.data
+    if (res.code === 200 && res.data) {
+      order.value = res.data
+      // 检查该订单是否已有售后记录
+      if (order.value.refundStatus === 1) {
+        ElMessage.warning('该订单已申请售后，请勿重复申请')
+        router.back()
+      } else if (order.value.refundStatus === 2) {
+        ElMessage.info('该订单售后已完成')
+        router.back()
+      }
+    }
   } catch { /* ignore */ }
 })
 </script>

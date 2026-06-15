@@ -111,18 +111,22 @@
               <el-icon v-if="row.status === 0" class="is-loading"><Loading /></el-icon>
               {{ getStatusText(row.status) }}
             </el-tag>
+            <el-tag v-if="row.refundStatus === 1" type="danger" size="small" effect="dark" class="mt-1" style="display:block;text-align:center">售后中</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-btns">
               <el-button 
-                v-if="row.status === 1" 
+                v-if="row.status === 1 && row.refundStatus !== 1" 
                 link 
                 type="primary" 
                 @click="handleShip(row)"
               >
                 <el-icon><Van /></el-icon>发货
+              </el-button>
+              <el-button v-else-if="row.status === 1 && row.refundStatus === 1" link type="danger" disabled>
+                <el-icon><Warning /></el-icon>售后中
               </el-button>
               <el-button link type="primary" @click="handleDetail(row)">
                 <el-icon><View /></el-icon>详情
@@ -239,7 +243,8 @@ import {
   Loading,
   Van,
   View,
-  Close
+  Close,
+  Warning
 } from '@element-plus/icons-vue'
 import { orderApi } from '@/api/order'
 
@@ -294,6 +299,7 @@ const getStatusType = (status) => {
     1: 'success',
     2: 'primary',
     3: 'info',
+    4: 'info',
     '-1': 'danger'
   }
   return types[status] || 'info'
@@ -306,6 +312,7 @@ const getStatusText = (status) => {
     1: '已支付',
     2: '已发货',
     3: '已完成',
+    4: '已完成',
     '-1': '已取消'
   }
   return texts[status] || '未知'
@@ -420,7 +427,12 @@ const handleShipSubmit = async () => {
     await shipFormRef.value.validate()
     shipLoading.value = true
     
-    await orderApi.ship(currentShipId.value, shipForm.value)
+    const res = await orderApi.ship(currentShipId.value, shipForm.value)
+    if (res.code !== 200) {
+      ElMessage.error(res.message || '发货失败')
+      loadData()
+      return
+    }
     ElMessage.success('发货成功')
     shipDialogVisible.value = false
     loadData()

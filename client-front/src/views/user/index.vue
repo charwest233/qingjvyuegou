@@ -6,10 +6,31 @@
       <router-link to="/login" class="btn-primary inline-block">去登录</router-link>
     </div>
     <template v-else>
-      <!-- 用户信息头部 -->
-      <div class="relative bg-gradient-to-br from-primary to-primary-light rounded-2xl p-6 mb-6 overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/3 -translate-x-1/3" />
+      <!-- 用户信息头部 → 流动渐变 -->
+      <div class="relative rounded-2xl p-6 mb-6 overflow-hidden">
+        <!-- 流动渐变背景 -->
+        <div class="absolute inset-0 bg-gradient-to-r from-primary via-cyan-400 via-emerald-300 to-primary bg-[length:400%_100%] animate-gradient-flow" />
+        <!-- 光晕装饰 -->
+        <div class="absolute inset-0">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/15 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl animate-pulse-slow" />
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/3 -translate-x-1/3 blur-xl animate-pulse-slow" style="animation-delay: 1.5s" />
+          <div class="absolute top-1/2 right-1/3 w-16 h-16 bg-white/10 rounded-full blur-xl animate-pulse-slow" style="animation-delay: 0.8s" />
+        </div>
+        <!-- 粒子 -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div v-for="n in 6" :key="n"
+            class="absolute w-1 h-1 bg-white/60 rounded-full animate-float-particle"
+            :style="{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 4}s`,
+              animationDuration: `${2 + Math.random() * 3}s`,
+              width: `${1 + Math.random() * 2}px`,
+              height: `${Math.random() * 2}px`,
+              opacity: 0.3 + Math.random() * 0.5
+            }"
+          />
+        </div>
         <div class="relative flex items-center gap-4">
           <div class="w-16 h-16 rounded-full bg-white/30 flex items-center justify-center overflow-hidden ring-2 ring-white/50">
             <img v-if="userInfo?.avatarUrl" :src="userInfo.avatarUrl" class="w-full h-full object-cover" />
@@ -97,6 +118,28 @@
             <p class="text-xs text-gray-400 mt-1">查看退款/退货进度</p>
           </div>
         </router-link>
+        <router-link to="/coupon/draw"
+          class="bg-white rounded-2xl p-5 shadow-sm card-hover cursor-pointer group flex items-center gap-4"
+        >
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all bg-amber-100">
+            <Gift class="w-6 h-6 text-amber-500" />
+          </div>
+          <div>
+            <p class="font-medium text-gray-900">每日抽奖</p>
+            <p class="text-xs text-gray-400 mt-1">免费抽取优惠券</p>
+          </div>
+        </router-link>
+        <router-link to="/coupon/my"
+          class="bg-white rounded-2xl p-5 shadow-sm card-hover cursor-pointer group flex items-center gap-4"
+        >
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all bg-teal-100">
+            <Ticket class="w-6 h-6 text-teal-500" />
+          </div>
+          <div>
+            <p class="font-medium text-gray-900">我的优惠券</p>
+            <p class="text-xs text-gray-400 mt-1">查看和管理优惠券</p>
+          </div>
+        </router-link>
         <router-link to="/settings"
           class="bg-white rounded-2xl p-5 shadow-sm card-hover cursor-pointer group flex items-center gap-4"
         >
@@ -138,7 +181,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { User, CreditCard, Package, Truck, Star, MapPin, Heart, MessageSquareText, Settings, LogOut, Headset, RotateCcw } from 'lucide-vue-next'
+import { User, CreditCard, Package, Truck, Star, MapPin, Heart, MessageSquareText, Settings, LogOut, Headset, RotateCcw, Gift, Ticket } from 'lucide-vue-next'
 import { getUser } from '@/utils/auth'
 import { getMyOrderStats } from '@/api/order'
 import { ElMessageBox } from 'element-plus'
@@ -187,3 +230,31 @@ onMounted(() => {
   }
 })
 </script>
+
+<style scoped>
+@keyframes gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-flow {
+  animation: gradient-flow 6s ease infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.15); }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+@keyframes float-particle {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-15px) scale(1.3); opacity: 0.8; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.animate-float-particle {
+  animation: float-particle 3s ease-in-out infinite;
+}
+</style>

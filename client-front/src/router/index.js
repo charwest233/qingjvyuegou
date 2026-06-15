@@ -70,13 +70,13 @@ const routes = [
   {
     path: '/ai-chat',
     name: 'AiChat',
-    component: () => import('@/views/ai-chat/index.vue'),
+    component: () => import('@/views/ai-chat/AiChat.vue'),
     meta: { title: 'AI导购', requiresAuth: true }
   },
   {
     path: '/ai-chat/:id',
     name: 'AiChatSession',
-    component: () => import('@/views/ai-chat/index.vue'),
+    component: () => import('@/views/ai-chat/AiChat.vue'),
     meta: { title: 'AI导购', requiresAuth: true }
   },
   {
@@ -92,9 +92,21 @@ const routes = [
     meta: { title: '我的评价', requiresAuth: true }
   },
   {
+    path: '/coupon/draw',
+    name: 'CouponDraw',
+    component: () => import('@/views/coupon/Draw.vue'),
+    meta: { title: '每日抽奖', requiresAuth: true }
+  },
+  {
+    path: '/coupon/my',
+    name: 'MyCoupons',
+    component: () => import('@/views/coupon/MyCoupons.vue'),
+    meta: { title: '我的优惠券', requiresAuth: true }
+  },
+  {
     path: '/customer-service',
     name: 'CustomerService',
-    component: () => import('@/views/customer-service/index.vue'),
+    component: () => import('@/views/customer-service/ChatService.vue'),
     meta: { title: '人工客服', requiresAuth: true }
   },
   // 售后相关
@@ -103,6 +115,12 @@ const routes = [
     name: 'ApplyRefund',
     component: () => import('@/views/refund/ApplyRefund.vue'),
     meta: { title: '申请售后', requiresAuth: true }
+  },
+  {
+    path: '/orders/tracking/:orderId',
+    name: 'OrderTracking',
+    component: () => import('@/views/tracking/index.vue'),
+    meta: { title: '物流追踪', requiresAuth: true }
   },
   {
     path: '/orders/refund/list',

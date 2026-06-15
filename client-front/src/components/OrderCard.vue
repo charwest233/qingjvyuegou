@@ -61,16 +61,34 @@
         >
           确认收货
         </button>
-        <!-- 已支付/已发货/已完成 → 申请售后 -->
+        <!-- 已发货 → 查看物流 -->
         <button
-          v-if="Number(order.status) === 1 || Number(order.status) === 2 || Number(order.status) === 3"
-          class="border border-orange-300 text-orange-500 text-sm px-3 py-1.5 rounded-lg
-                 hover:bg-orange-50 transition-all cursor-pointer"
-          @click="handleRefund(order)"
+          v-if="Number(order.status) === 2"
+          class="border border-blue-300 text-blue-500 text-sm px-3 py-1.5 rounded-lg
+                 hover:bg-blue-50 transition-all cursor-pointer"
+          @click="handleTracking"
         >
-          申请售后
+          查看物流
         </button>
-        <!-- 已完成 → 已评价/去评价 -->
+        <!-- 已支付/已发货/已完成 → 申请售后 -->
+        <template v-if="Number(order.status) === 1 || Number(order.status) === 2 || Number(order.status) === 3 || Number(order.status) === 4">
+          <span v-if="order.refundStatus === 1"
+            class="text-xs text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg cursor-not-allowed">
+            已申请售后
+          </span>
+          <span v-else-if="order.refundStatus === 2"
+            class="text-xs text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg">
+            售后已完成
+          </span>
+          <button v-else
+            class="border border-orange-300 text-orange-500 text-sm px-3 py-1.5 rounded-lg
+                   hover:bg-orange-50 transition-all cursor-pointer"
+            @click="handleRefund(order)"
+          >
+            申请售后
+          </button>
+        </template>
+        <!-- 已完成 → 去评价/已评价 -->
         <template v-if="Number(order.status) === 3">
           <span
             v-if="allReviewed"
@@ -102,9 +120,9 @@
         >
           取消订单
         </button>
-        <!-- 已完成/已取消 → 删除订单 -->
+        <!-- 已完成/已取消/已售后 → 删除订单 -->
         <button
-          v-if="Number(order.status) === 3 || Number(order.status) === -1"
+          v-if="Number(order.status) === 3 || Number(order.status) === -1 || Number(order.status) === 4"
           class="border border-gray-300 text-gray-400 text-sm px-3 py-1.5 rounded-lg
                  hover:border-functional-danger hover:text-functional-danger transition-colors cursor-pointer"
           @click="handleDelete"
@@ -195,6 +213,10 @@ async function checkReviewStatus() {
 
 function handleRefund(order) {
   router.push(`/orders/refund/apply/${order.id}`)
+}
+
+function handleTracking() {
+  router.push(`/orders/tracking/${props.order.id}`)
 }
 
 function handleReview() {

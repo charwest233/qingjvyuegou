@@ -186,7 +186,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                 if ("DELETE".equals(method) && path.matches("^/api/order/\\d+$")) {
                     return true;
                 }
-                return path.matches("^/api/order/\\d+/pay$") || path.matches("^/api/order/\\d+/cancel$") || path.matches("^/api/order/\\d+/confirm$");
+                return path.matches("^/api/order/\\d+/pay$") || path.matches("^/api/order/\\d+/cancel$") || path.matches("^/api/order/\\d+/confirm$") || path.matches("^/api/order/\\d+/tracking$");
             }
 
             if (path.startsWith("/api/customer-service")) {
@@ -194,6 +194,10 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             }
 
             if (path.startsWith("/api/refund")) {
+                return true;
+            }
+
+            if (path.startsWith("/api/coupon")) {
                 return true;
             }
 

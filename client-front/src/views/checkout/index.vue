@@ -52,6 +52,43 @@
       </div>
     </section>
 
+    <!-- 优惠券 -->
+    <section class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-medium text-gray-700">优惠券</h3>
+        <button v-if="couponList.length > 0"
+          class="text-xs text-primary hover:text-primary-dark transition-colors cursor-pointer"
+          @click="showCouponPicker = !showCouponPicker"
+        >{{ selectedCoupon ? '更换' : '选择优惠券' }}</button>
+      </div>
+      <div v-if="selectedCoupon" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
+        <Gift class="w-4 h-4 text-green-500 shrink-0" />
+        <span class="text-sm text-green-700">{{ selectedCoupon.name }}（-¥{{ selectedCoupon.value?.toFixed(0) }}）</span>
+        <button class="ml-auto text-xs text-gray-400 hover:text-functional-danger cursor-pointer" @click="selectedCoupon = null">取消</button>
+      </div>
+      <div v-else class="text-xs text-gray-400">暂无可用优惠券</div>
+
+      <!-- 优惠券选择面板 -->
+      <div v-if="showCouponPicker && couponList.length > 0" class="mt-3 space-y-2 max-h-48 overflow-y-auto">
+        <div v-for="c in couponList" :key="c.id"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+          :class="selectedCoupon?.id === c.id ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200'"
+          @click="selectCoupon(c)"
+        >
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-sm font-bold shrink-0">
+            ¥{{ c.value?.toFixed(0) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-800">{{ c.name }}</p>
+            <p class="text-xs text-gray-400">满¥{{ c.minAmount }}可用 · {{ formatDate(c.expiresAt) }}到期</p>
+          </div>
+          <div v-if="selectedCoupon?.id === c.id" class="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+            <Check class="w-3 h-3" />
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 订单汇总 -->
     <section class="bg-white rounded-2xl p-4 shadow-sm mb-4">
       <div class="space-y-2 text-sm">
@@ -63,9 +100,13 @@
           <span>运费</span>
           <span class="text-functional-success">免运费</span>
         </div>
+        <div v-if="selectedCoupon" class="flex justify-between text-functional-success text-sm">
+          <span>优惠券抵扣</span>
+          <span>-¥{{ formatPrice(discountAmount) }}</span>
+        </div>
         <div class="flex justify-between text-base font-bold pt-2 border-t border-gray-100">
           <span>实付金额</span>
-          <span class="text-functional-danger text-xl">¥{{ formatPrice(totalAmount) }}</span>
+          <span class="text-functional-danger text-xl">¥{{ formatPrice(payAmount) }}</span>
         </div>
       </div>
     </section>
@@ -94,15 +135,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { MapPin, Package } from 'lucide-vue-next'
+import { MapPin, Package, Gift, Check } from 'lucide-vue-next'
 import { ElMessage } from 'element-plus'
 import AddressPicker from '@/components/AddressPicker.vue'
 import { useCartStore } from '@/stores/cart'
 import { createOrder } from '@/api/order'
 import { getUserAddresses } from '@/api/user'
 import { getProductDetail } from '@/api/product'
+import { getAvailableCoupons } from '@/api/coupon'
 import { formatPrice } from '@/utils/format'
 
 const route = useRoute()
@@ -132,6 +174,45 @@ const canSubmit = computed(() => {
   return selectedAddress.value && cartItems.value.length > 0 && !submitting.value
 })
 
+// ===== 优惠券 =====
+const couponList = ref([])
+const selectedCoupon = ref(null)
+const showCouponPicker = ref(false)
+
+const discountAmount = computed(() => {
+  if (!selectedCoupon.value) return 0
+  return Math.min(selectedCoupon.value.value, totalAmount.value)
+})
+
+const payAmount = computed(() => {
+  return Math.max(0, totalAmount.value - discountAmount.value)
+})
+
+function formatDate(t) {
+  if (!t) return ''
+  const d = new Date(t)
+  return `${d.getMonth()+1}月${d.getDate()}日`
+}
+
+async function loadCoupons() {
+  try {
+    const res = await getAvailableCoupons(totalAmount.value)
+    if (res.code === 200 && res.data) {
+      couponList.value = res.data
+    }
+  } catch { /* ignore */ }
+}
+
+// 金额变化时重新加载可用优惠券（避免刚加载时 totalAmount=0 导致无券）
+watch(totalAmount, (val) => {
+  if (val > 0) loadCoupons()
+})
+
+function selectCoupon(c) {
+  selectedCoupon.value = c
+  showCouponPicker.value = false
+}
+
 function onAddressSelect(addr) {
   selectedAddress.value = addr
 }
@@ -143,6 +224,7 @@ async function submitOrder() {
   try {
     const orderData = {
       addressId: selectedAddress.value.id,
+      couponId: selectedCoupon.value?.id || null,
       items: cartItems.value.map(item => ({
         productId: item.productId || item.product_id,
         quantity: item.quantity
@@ -208,5 +290,6 @@ onMounted(() => {
     }
   }
   loadDefaultAddress()
+  loadCoupons()
 })
 </script>

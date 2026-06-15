@@ -1,6 +1,8 @@
 package com.char1234.ai;
 
+import com.char1234.entity.AiSession;
 import com.char1234.entity.CartItem;
+import com.char1234.mapper.AiSessionMapper;
 import com.char1234.service.CartService;
 import com.char1234.service.ProductRagService;
 import dev.langchain4j.agent.tool.P;
@@ -28,6 +30,9 @@ public class CartTool {
     @Autowired
     private ProductRagService productRagService;
 
+    @Autowired
+    private AiSessionMapper aiSessionMapper;
+
     /**
      * 搜索商品：根据名称关键词搜索，返回商品列表信息
      */
@@ -47,15 +52,28 @@ public class CartTool {
     }
 
     /**
+     * 根据 @ToolMemoryId（实际是sessionId）获取真实userId
+     */
+    private Long resolveUserId(String sessionId) {
+        AiSession session = aiSessionMapper.selectById(sessionId);
+        if (session == null) {
+            log.warn("AI工具调用：会话不存在，sessionId={}", sessionId);
+            throw new RuntimeException("会话不存在");
+        }
+        return session.getUserId();
+    }
+
+    /**
      * 添加商品到购物车
      */
     @Tool("添加商品到购物车。注意：需先通过 searchProduct 搜索获取商品ID后再调用此方法")
     public String addCart(
-            @ToolMemoryId String userId,
+            @ToolMemoryId String sessionId,
             @P("商品ID，通过 searchProduct 获取") Long productId,
             @P("购买数量，默认为1") Integer quantity) {
+        Long userId = resolveUserId(sessionId);
         log.info("AI加购物车: userId={}, productId={}, quantity={}", userId, productId, quantity);
-        cartService.addToCart(Long.valueOf(userId), productId, quantity != null ? quantity : 1);
+        cartService.addToCart(userId, productId, quantity != null ? quantity : 1);
         return "已成功添加商品(ID=" + productId + ")到购物车" +
                 (quantity != null && quantity > 1 ? "，数量" + quantity + "件" : "");
     }
@@ -64,9 +82,10 @@ public class CartTool {
      * 查询购物车内容
      */
     @Tool("查询当前用户的购物车内容，返回商品名称、数量、价格等信息")
-    public String selectCart(@ToolMemoryId String userId) {
+    public String selectCart(@ToolMemoryId String sessionId) {
+        Long userId = resolveUserId(sessionId);
         log.info("AI查购物车: userId={}", userId);
-        List<CartItem> items = cartService.getCartList(Long.valueOf(userId));
+        List<CartItem> items = cartService.getCartList(userId);
         if (items == null || items.isEmpty()) {
             return "您的购物车是空的，快去挑选心仪的商品吧！";
         }
@@ -94,8 +113,9 @@ public class CartTool {
      */
     @Tool("从购物车移除指定商品")
     public String removeFromCart(
-            @ToolMemoryId String userId,
+            @ToolMemoryId String sessionId,
             @P("要移除的商品名称或商品ID") String productNameOrId) {
+        Long userId = resolveUserId(sessionId);
         log.info("AI移除购物车商品: userId={}, productNameOrId={}", userId, productNameOrId);
         Long productId;
         try {
@@ -107,7 +127,7 @@ public class CartTool {
             }
             productId = ((Number) products.get(0).get("id")).longValue();
         }
-        cartService.removeFromCart(Long.valueOf(userId), productId);
+        cartService.removeFromCart(userId, productId);
         return "已从购物车移除商品(ID=" + productId + ")";
     }
 
@@ -115,9 +135,10 @@ public class CartTool {
      * 清空购物车
      */
     @Tool("清空当前用户的购物车")
-    public String clearCart(@ToolMemoryId String userId) {
+    public String clearCart(@ToolMemoryId String sessionId) {
+        Long userId = resolveUserId(sessionId);
         log.info("AI清空购物车: userId={}", userId);
-        cartService.clearCart(Long.valueOf(userId));
+        cartService.clearCart(userId);
         return "购物车已清空";
     }
 }

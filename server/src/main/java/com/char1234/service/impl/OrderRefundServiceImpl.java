@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -30,8 +31,6 @@ public class OrderRefundServiceImpl
     @Autowired
     private OrderItemMapper orderItemMapper;
 
-    // 使用雪花算法思想：时间戳 + 随机数，避免重启后序号重复
-
     @Override
     @Transactional
     public OrderRefund applyRefund(Long userId, Long orderId, Long orderItemId,
@@ -41,6 +40,27 @@ public class OrderRefundServiceImpl
         if (!order.getUserId().equals(userId)) throw new RuntimeException("无权操作此订单");
         if (order.getStatus() < 1 || order.getStatus() > 3) throw new RuntimeException("当前订单状态不可申请售后");
 
+        // ===== 防重复申请检查 =====
+        // 整单退款：检查是否存在任何整单退款记录（含已驳回/已撤销，防止重复创建）
+        if (orderItemId == null) {
+            if (baseMapper.countByOrderIdAnyStatus(orderId) > 0) {
+                throw new RuntimeException("该订单已申请过整单退款，不能重复申请");
+            }
+            // 已有单品退款的，也不能再申请整单退款
+            if (baseMapper.countByOrderId(orderId) > 0) {
+                throw new RuntimeException("该订单已有商品申请售后，请先撤销后再申请整单退款");
+            }
+        } else {
+            // 单品退款：已有整单退款的不能单品退款
+            if (baseMapper.countByOrderIdAnyStatus(orderId) > 0) {
+                throw new RuntimeException("该订单已申请整单退款，不能再对单个商品申请售后");
+            }
+            if (baseMapper.countActiveByOrderItemId(orderItemId) > 0) {
+                throw new RuntimeException("该商品已申请售后");
+            }
+        }
+
+        // ===== 计算退款金额 =====
         BigDecimal refundAmount;
         String productName = null, productImage = null, productId = null;
         Integer quantity = null;
@@ -48,12 +68,31 @@ public class OrderRefundServiceImpl
         if (orderItemId != null) {
             OrderItem item = orderItemMapper.selectById(orderItemId);
             if (item == null || !item.getOrderId().equals(orderId)) throw new RuntimeException("订单项不存在");
-            if (baseMapper.countActiveByOrderItemId(orderItemId) > 0) throw new RuntimeException("该商品已申请售后");
-            refundAmount = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+
+            // 单品退款：按价格比例分摊优惠券
+            BigDecimal itemOriginal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            // 查询订单所有商品原总价
+            List<OrderItem> allItems = orderItemMapper.selectList(
+                    new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId));
+            BigDecimal allOriginal = allItems.stream()
+                    .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal paidAmount = order.getTotalAmount(); // 已扣优惠券
+            if (paidAmount.compareTo(BigDecimal.ZERO) > 0
+                    && allOriginal.compareTo(paidAmount) > 0) {
+                // 有优惠券，按比例分摊：退款 = 商品原价 × (实付 / 原总价)
+                refundAmount = itemOriginal.multiply(paidAmount)
+                        .divide(allOriginal, 2, RoundingMode.HALF_UP);
+            } else {
+                refundAmount = itemOriginal;
+            }
+
             productName = item.getProductName();
             productImage = item.getProductImage();
             quantity = item.getQuantity();
         } else {
+            // 整单退款金额 = 订单实付金额（已在创建时扣减优惠券）
             refundAmount = order.getTotalAmount();
         }
 
@@ -68,6 +107,11 @@ public class OrderRefundServiceImpl
         refund.setReason(reason);
         refund.setDescription(description);
         refund.setApplyTime(LocalDateTime.now());
+        refund.setProductName(productName);
+        refund.setProductImage(productImage);
+        if (productId != null) {
+            refund.setProductId(Long.valueOf(productId));
+        }
         // 仅退款→0待审核；退货退款→1待填物流（跳过审核，直接填物流）
         refund.setStatus(type == 1 ? 0 : 1);
         save(refund);
@@ -115,10 +159,23 @@ public class OrderRefundServiceImpl
             if (refund.getStatus() != 3) throw new RuntimeException("请先确认收货后再审核");
         }
 
-        refund.setStatus(approved ? 4 : 5);
+        if (approved) {
+            refund.setStatus(4); // 已退款
+            refund.setRefundTime(LocalDateTime.now());
+
+            // 仅退款（未发货）完成 → 将订单状态更新为 4（已售后）
+            if (refund.getType() == 1) {
+                Order order = orderService.getById(refund.getOrderId());
+                if (order != null && order.getStatus() == 1) {
+                    order.setStatus(4);
+                    orderService.updateById(order);
+                }
+            }
+        } else {
+            refund.setStatus(5); // 审核驳回
+        }
         refund.setAuditRemark(remark);
         refund.setAuditTime(LocalDateTime.now());
-        if (approved) refund.setRefundTime(LocalDateTime.now());
         updateById(refund);
     }
 

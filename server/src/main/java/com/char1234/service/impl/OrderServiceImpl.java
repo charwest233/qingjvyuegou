@@ -8,8 +8,10 @@ import com.char1234.entity.OrderItem;
 import com.char1234.entity.Product;
 import com.char1234.entity.ProductReview;
 import com.char1234.entity.UserAddress;
+import com.char1234.entity.OrderRefund;
 import com.char1234.mapper.OrderItemMapper;
 import com.char1234.mapper.OrderMapper;
+import com.char1234.mapper.OrderRefundMapper;
 import com.char1234.mapper.ProductMapper;
 import com.char1234.mapper.ProductReviewMapper;
 import com.char1234.service.CartService;
@@ -63,6 +65,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private OrderRefundMapper orderRefundMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -161,7 +166,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             wrapper.like(Order::getOrderNo, orderNo);
         }
         if (status != null) {
-            wrapper.eq(Order::getStatus, status);
+            // 筛选"已完成"时同时包含正常完成和售后完成的订单
+            if (status == 3) {
+                wrapper.in(Order::getStatus, 3, 4);
+            } else {
+                wrapper.eq(Order::getStatus, status);
+            }
         }
         if (userId != null) {
             wrapper.eq(Order::getUserId, userId);
@@ -171,7 +181,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         Page<Order> result = page(pageParam, wrapper);
 
-        // 为每个订单填充 items
+        // 为每个订单填充 items 和售后状态
         if (result.getRecords() != null && !result.getRecords().isEmpty()) {
             List<Long> orderIds = result.getRecords().stream()
                     .map(Order::getId)
@@ -180,8 +190,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     new LambdaQueryWrapper<OrderItem>().in(OrderItem::getOrderId, orderIds));
             Map<Long, List<OrderItem>> itemsByOrderId = allItems.stream()
                     .collect(java.util.stream.Collectors.groupingBy(OrderItem::getOrderId));
+            // 查询每个订单的售后记录
+            List<OrderRefund> allRefunds = orderRefundMapper.selectList(
+                    new LambdaQueryWrapper<OrderRefund>().in(OrderRefund::getOrderId, orderIds));
+            Map<Long, List<OrderRefund>> refundsByOrderId = allRefunds.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(OrderRefund::getOrderId));
             for (Order order : result.getRecords()) {
                 order.setItems(itemsByOrderId.getOrDefault(order.getId(), new ArrayList<>()));
+                List<OrderRefund> refunds = refundsByOrderId.get(order.getId());
+                if (refunds != null && !refunds.isEmpty()) {
+                    boolean hasActive = refunds.stream().anyMatch(r ->
+                            r.getStatus() == 0 || r.getStatus() == 1 || r.getStatus() == 2);
+                    order.setRefundStatus(hasActive ? 1 : 2);
+                } else {
+                    order.setRefundStatus(0);
+                }
             }
         }
 
@@ -190,7 +213,18 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public Order getOrderDetail(Long id) {
-        return orderMapper.selectOrderById(id);
+        Order order = orderMapper.selectOrderById(id);
+        if (order != null) {
+            List<OrderRefund> refunds = orderRefundMapper.findByOrderId(id);
+            if (refunds != null && !refunds.isEmpty()) {
+                boolean hasActive = refunds.stream().anyMatch(r ->
+                        r.getStatus() == 0 || r.getStatus() == 1 || r.getStatus() == 2);
+                order.setRefundStatus(hasActive ? 1 : 2);
+            } else {
+                order.setRefundStatus(0);
+            }
+        }
+        return order;
     }
 
     @Override
@@ -224,7 +258,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (order == null || order.getStatus() != 1) {
             return false;
         }
+        // 退款中的订单禁止发货（含已退款、已驳回状态）
+        List<OrderRefund> refunds = orderRefundMapper.findByOrderId(id);
+        boolean hasActiveRefund = refunds.stream().anyMatch(r ->
+                r.getStatus() == 0 || r.getStatus() == 1 || r.getStatus() == 2 || r.getStatus() == 3 || r.getStatus() == 4);
+        if (hasActiveRefund) {
+            return false;
+        }
         order.setStatus(2);
+        order.setExpressCompany(company);
+        order.setExpressNo(trackingNo);
         return updateById(order);
     }
 
@@ -347,7 +390,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         m.put("pending", count(new LambdaQueryWrapper<Order>().eq(Order::getStatus, 0)));
         m.put("paid", count(new LambdaQueryWrapper<Order>().eq(Order::getStatus, 1)));
         m.put("shipped", count(new LambdaQueryWrapper<Order>().eq(Order::getStatus, 2)));
-        m.put("completed", count(new LambdaQueryWrapper<Order>().eq(Order::getStatus, 3)));
+        m.put("completed", count(new LambdaQueryWrapper<Order>().in(Order::getStatus, 3, 4)));
         m.put("cancelled", count(new LambdaQueryWrapper<Order>().eq(Order::getStatus, -1)));
         m.put("totalOrders", count());
         return m;

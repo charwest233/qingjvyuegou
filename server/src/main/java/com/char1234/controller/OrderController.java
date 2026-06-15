@@ -5,10 +5,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.char1234.common.Result;
 import com.char1234.context.JwtContextHolder;
 import com.char1234.entity.Order;
+import com.char1234.entity.TrackingDTO;
+import com.char1234.entity.UserCoupon;
+import com.char1234.mapper.UserCouponMapper;
+import com.char1234.service.CouponService;
 import com.char1234.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +30,12 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private CouponService couponService;
+
+    @Autowired
+    private UserCouponMapper userCouponMapper;
 
     @GetMapping("/list")
     public Result<Map<String, Object>> list(
@@ -82,6 +96,19 @@ public class OrderController {
         try {
             Order order = orderService.createOrder(ctx.principalId(), items,
                     addressId, receiverName, receiverPhone, receiverAddress);
+            // 使用优惠券
+            Object cid = params.get("couponId");
+            if (cid != null) {
+                Long couponId = Long.valueOf(cid.toString());
+                couponService.useCoupon(couponId, ctx.principalId(), order.getId());
+                // 更新订单实付金额（原价 - 优惠券抵扣）
+                UserCoupon uc = userCouponMapper.selectById(couponId);
+                if (uc != null) {
+                    BigDecimal discount = couponService.calcDiscount(order.getTotalAmount(), uc);
+                    order.setTotalAmount(order.getTotalAmount().subtract(discount));
+                    orderService.updateById(order);
+                }
+            }
             return Result.success(order);
         } catch (Exception e) {
             return Result.error(e.getMessage());
@@ -182,6 +209,73 @@ public class OrderController {
         return Result.success(true);
     }
 
+    @GetMapping("/{id}/tracking")
+    public Result<TrackingDTO> tracking(@PathVariable Long id) {
+        Order order = orderService.getById(id);
+        if (order == null) return Result.error("订单不存在");
+        JwtContextHolder.Context ctx = JwtContextHolder.get();
+        if (!canAccessOrder(order, ctx)) return Result.error(403, "无权限查看");
+
+        if (order.getStatus() < 2) return Result.error("订单尚未发货");
+
+        return Result.success(generateSimulatedTracking(order));
+    }
+
+    /**
+     * 根据收货地址模拟生成物流轨迹（演示用，非真实物流数据）
+     */
+    private TrackingDTO generateSimulatedTracking(Order order) {
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM-dd HH:mm");
+        String now = LocalDateTime.now().format(fmt);
+
+        // 根据收货地址解析城市坐标
+        String addr = order.getReceiverAddress() != null ? order.getReceiverAddress() : "";
+        double[] dst = guessCityCenter(addr);
+
+        // 仓库坐标（当前城市偏郊区位置）
+        double[] warehouse = new double[]{dst[0] - 0.25, dst[1] + 0.08};
+
+        // 分拣中心坐标
+        double[] sorting = new double[]{dst[0] - 0.10, dst[1] + 0.04};
+
+        // 配送站坐标
+        double[] station = new double[]{dst[0] - 0.03, dst[1] + 0.02};
+
+        List<TrackingDTO.Point> route = new ArrayList<>();
+        route.add(new TrackingDTO.Point(BigDecimal.valueOf(warehouse[0]), BigDecimal.valueOf(warehouse[1])));
+        route.add(new TrackingDTO.Point(BigDecimal.valueOf(sorting[0]), BigDecimal.valueOf(sorting[1])));
+        route.add(new TrackingDTO.Point(BigDecimal.valueOf(station[0]), BigDecimal.valueOf(station[1])));
+        route.add(new TrackingDTO.Point(BigDecimal.valueOf(dst[0]), BigDecimal.valueOf(dst[1])));
+
+        List<TrackingDTO.TrackingStep> steps = new ArrayList<>();
+        steps.add(new TrackingDTO.TrackingStep(now, "包裹已出库，等待运输", BigDecimal.valueOf(warehouse[0]), BigDecimal.valueOf(warehouse[1])));
+        steps.add(new TrackingDTO.TrackingStep(now, "已到达分拣中心", BigDecimal.valueOf(sorting[0]), BigDecimal.valueOf(sorting[1])));
+        steps.add(new TrackingDTO.TrackingStep(now, "快递员正在派送", BigDecimal.valueOf(station[0]), BigDecimal.valueOf(station[1])));
+        steps.add(new TrackingDTO.TrackingStep(now, "已签收", BigDecimal.valueOf(dst[0]), BigDecimal.valueOf(dst[1])));
+
+        return new TrackingDTO(order.getId(), order.getOrderNo(),
+                order.getExpressCompany(), order.getExpressNo(),
+                order.getStatus() == 3 ? "delivered" : "shipping",
+                order.getReceiverAddress(),
+                route, steps);
+    }
+
+    /** 简易城市坐标映射（演示用） */
+    private static double[] guessCityCenter(String address) {
+        if (address.contains("北京")) return new double[]{116.397, 39.908};
+        if (address.contains("上海")) return new double[]{121.474, 31.230};
+        if (address.contains("广州")) return new double[]{113.264, 23.129};
+        if (address.contains("深圳")) return new double[]{114.057, 22.543};
+        if (address.contains("杭州")) return new double[]{120.155, 30.274};
+        if (address.contains("成都")) return new double[]{104.066, 30.572};
+        if (address.contains("武汉")) return new double[]{114.305, 30.593};
+        if (address.contains("南京")) return new double[]{118.796, 32.060};
+        if (address.contains("重庆")) return new double[]{106.551, 29.563};
+        if (address.contains("西安")) return new double[]{108.940, 34.261};
+        // 默认上海
+        return new double[]{121.474, 31.230};
+    }
+
     @GetMapping("/statistics")
     public Result<Map<String, Object>> statistics() {
         return Result.success(orderService.getOrderStatistics());
@@ -216,11 +310,18 @@ public class OrderController {
             return Result.error(403, "未登录");
         }
         Long userId = ctx.principalId();
+        // 统计时排除已有售后记录的订单，避免退款完成后红点还在
         Map<String, Object> stats = new HashMap<>();
-        stats.put("pending", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 0)));
-        stats.put("paid", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 1)));
-        stats.put("shipped", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 2)));
-        stats.put("completed", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>().eq(Order::getUserId, userId).eq(Order::getStatus, 3)));
+        stats.put("pending", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId).eq(Order::getStatus, 0)));
+        stats.put("paid", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId).eq(Order::getStatus, 1)
+                .notInSql(Order::getId, "SELECT order_id FROM t_order_refund WHERE status IN (0,1,2,3,4)")));
+        stats.put("shipped", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId).eq(Order::getStatus, 2)
+                .notInSql(Order::getId, "SELECT order_id FROM t_order_refund WHERE status IN (0,1,2,3,4)")));
+        stats.put("completed", orderService.count(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Order>()
+                .eq(Order::getUserId, userId).in(Order::getStatus, 3, 4)));
         return Result.success(stats);
     }
 

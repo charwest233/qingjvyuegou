@@ -39,7 +39,8 @@ export const orderStatusMap = {
   '0': '待支付',
   '1': '已支付',
   '2': '已发货',
-  '3': '已完成'
+  '3': '已完成',
+  '4': '已完成'
 }
 
 export function getOrderStatusText(status) {
@@ -55,7 +56,8 @@ export function getOrderStatusType(status) {
     '0': 'warning',
     '1': 'info',
     '2': 'primary',
-    '3': 'success'
+    '3': 'success',
+    '4': 'success'
   }
   return map[String(status)] || 'info'
 }

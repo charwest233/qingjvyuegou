@@ -13,6 +13,8 @@
         <result column="receiver_phone" property="receiverPhone"/>
         <result column="receiver_address" property="receiverAddress"/>
         <result column="address_id" property="addressId"/>
+        <result column="express_company" property="expressCompany"/>
+        <result column="express_no" property="expressNo"/>
         <result column="create_time" property="createTime"/>
         <result column="nickname" property="userName"/>
         <result column="avatar_url" property="userAvatar"/>
@@ -37,6 +39,8 @@
                o.receiver_phone,
                o.receiver_address,
                o.address_id,
+               o.express_company,
+               o.express_no,
                o.create_time,
                u.nickname,
                u.avatar_url,

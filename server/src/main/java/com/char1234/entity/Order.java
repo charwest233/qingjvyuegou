@@ -27,7 +27,7 @@ public class Order {
     private BigDecimal totalAmount;
 
     /**
-     * -1-已取消, 0-待支付, 1-已支付, 2-已发货, 3-已完成
+     * -1-已取消, 0-待支付, 1-已支付, 2-已发货, 3-已完成, 4-已完成(售后)
      */
     private Integer status;
 
@@ -42,6 +42,12 @@ public class Order {
 
     private String receiverAddress;
 
+    /** 快递公司 */
+    private String expressCompany;
+
+    /** 快递单号 */
+    private String expressNo;
+
     private LocalDateTime createTime;
 
     @TableField(exist = false)
@@ -52,4 +58,8 @@ public class Order {
 
     @TableField(exist = false)
     private List<OrderItem> items;
+
+    /** 0-无售后 1-售后处理中 2-售后已完成 */
+    @TableField(exist = false)
+    private Integer refundStatus;
 }

@@ -183,7 +183,7 @@ async function fetchOrders() {
   try {
     const res = await getOrders({ page: 1, size: 50 })
     if (res.code === 200 && res.data) {
-      orderList.value = (res.data.list || []).filter(o => o.status !== 4) // 过滤已取消
+      orderList.value = (res.data.list || []).filter(o => o.status !== 4)
     }
   } catch (err) { ElMessage.error('加载订单失败') }
   finally { orderLoading.value = false }
@@ -195,7 +195,6 @@ function selectOrder(order) {
   sendMessage(text)
 }
 
-// 展开订单面板时自动加载订单
 watch(showOrderPanel, (val) => { if (val) fetchOrders() })
 
 function scrollToBottom() { nextTick(() => { if (chatContainer.value) chatContainer.value.scrollTop = chatContainer.value.scrollHeight }) }
