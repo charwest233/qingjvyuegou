@@ -5,6 +5,8 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.char1234.config.AlipayProperties;
 import com.char1234.entity.Order;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 /**
@@ -133,6 +137,45 @@ public class AlipayService {
         } catch (AlipayApiException e) {
             log.error("支付宝异步通知处理异常", e);
             return "failure";
+        }
+    }
+
+    /**
+     * 支付宝退款
+     *
+     * @param tradeNo      支付宝交易号（对应 Order.payNo）
+     * @param refundAmount 退款金额
+     * @param refundReason 退款原因
+     * @return true-退款成功, false-退款失败
+     */
+    public boolean refund(String tradeNo, BigDecimal refundAmount, String refundReason) {
+        try {
+            AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
+            // 使用退款单号作为 out_request_no，保证幂等性
+            String outRequestNo = "REFUND" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
+                    + (int) (Math.random() * 9000 + 1000);
+            String bizContent = String.format(
+                    "{\"trade_no\":\"%s\",\"refund_amount\":\"%s\",\"refund_reason\":\"%s\",\"out_request_no\":\"%s\"}",
+                    tradeNo,
+                    refundAmount.setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
+                    refundReason != null ? refundReason : "",
+                    outRequestNo
+            );
+            request.setBizContent(bizContent);
+
+            AlipayTradeRefundResponse response = getAlipayClient().execute(request);
+            if (response.isSuccess()) {
+                log.info("支付宝退款成功 tradeNo={}, amount={}", tradeNo, refundAmount);
+                return true;
+            } else {
+                log.error("支付宝退款失败 tradeNo={}, code={}, msg={}, subMsg={}",
+                        tradeNo, response.getCode(), response.getMsg(),
+                        response.getSubMsg());
+                return false;
+            }
+        } catch (AlipayApiException e) {
+            log.error("支付宝退款异常 tradeNo={}", tradeNo, e);
+            return false;
         }
     }
 }

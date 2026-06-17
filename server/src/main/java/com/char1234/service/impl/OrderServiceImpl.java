@@ -237,18 +237,55 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setStatus(1);
         boolean ok = updateById(order);
         if (ok) {
-            List<OrderItem> lines = orderItemMapper.selectList(
-                    new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
-            for (OrderItem line : lines) {
-                Product p = productService.getById(line.getProductId());
-                if (p != null) {
-                    int sc = p.getSalesCount() == null ? 0 : p.getSalesCount();
-                    p.setSalesCount(sc + line.getQuantity());
-                    productService.updateById(p);
-                }
-            }
+            increaseSales(id);
         }
         return ok;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean confirmAlipayPayment(Long id, String payNo) {
+        boolean ok = lambdaUpdate()
+                .eq(Order::getId, id)
+                .eq(Order::getStatus, 0)
+                .set(Order::getStatus, 1)
+                .set(Order::getPayNo, payNo)
+                .set(Order::getPayTime, LocalDateTime.now())
+                .update();
+        if (ok) {
+            increaseSales(id);
+        }
+        return ok;
+    }
+
+    /**
+     * 异步通知到达后补充更新 payNo 和 payTime（与 confirmAlipayPayment 分开执行）
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updatePayDetails(Long id, String payNo) {
+        return lambdaUpdate()
+                .eq(Order::getId, id)
+                .eq(Order::getStatus, 1)
+                .set(Order::getPayNo, payNo)
+                .set(Order::getPayTime, LocalDateTime.now())
+                .update();
+    }
+
+    /**
+     * 更新商品销量（被 payOrder / confirmAlipayPayment 共用）
+     */
+    private void increaseSales(Long id) {
+        List<OrderItem> lines = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, id));
+        for (OrderItem line : lines) {
+            Product p = productService.getById(line.getProductId());
+            if (p != null) {
+                int sc = p.getSalesCount() == null ? 0 : p.getSalesCount();
+                p.setSalesCount(sc + line.getQuantity());
+                productService.updateById(p);
+            }
+        }
     }
 
     @Override
@@ -258,10 +295,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (order == null || order.getStatus() != 1) {
             return false;
         }
-        // 退款中的订单禁止发货（含已退款、已驳回状态）
+        // 退款处理中的订单禁止发货（仅检查进行中的状态，已退款/已驳回/已撤销不阻塞）
         List<OrderRefund> refunds = orderRefundMapper.findByOrderId(id);
         boolean hasActiveRefund = refunds.stream().anyMatch(r ->
-                r.getStatus() == 0 || r.getStatus() == 1 || r.getStatus() == 2 || r.getStatus() == 3 || r.getStatus() == 4);
+                r.getStatus() == 0 || r.getStatus() == 1 || r.getStatus() == 2 || r.getStatus() == 3);
         if (hasActiveRefund) {
             return false;
         }

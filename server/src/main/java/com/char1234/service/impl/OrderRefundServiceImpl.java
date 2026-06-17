@@ -7,6 +7,7 @@ import com.char1234.entity.OrderItem;
 import com.char1234.entity.OrderRefund;
 import com.char1234.mapper.OrderItemMapper;
 import com.char1234.mapper.OrderRefundMapper;
+import com.char1234.service.AlipayService;
 import com.char1234.service.OrderRefundService;
 import com.char1234.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,8 @@ public class OrderRefundServiceImpl
     private OrderService orderService;
     @Autowired
     private OrderItemMapper orderItemMapper;
+    @Autowired
+    private AlipayService alipayService;
 
     @Override
     @Transactional
@@ -148,7 +151,7 @@ public class OrderRefundServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void auditRefund(Long refundId, Long adminId, boolean approved, String remark) {
         OrderRefund refund = getById(refundId);
         if (refund == null) throw new RuntimeException("售后单不存在");
@@ -160,17 +163,37 @@ public class OrderRefundServiceImpl
         }
 
         if (approved) {
-            refund.setStatus(4); // 已退款
-            refund.setRefundTime(LocalDateTime.now());
+            // 查找订单获取支付宝交易号
+            Order order = orderService.getById(refund.getOrderId());
+            if (order != null) {
+                String tradeNo = order.getPayNo();
+                // 如果有支付宝交易号，调用支付宝退款
+                if (tradeNo != null && !tradeNo.isEmpty()) {
+                    String reason = refund.getReason() != null ? refund.getReason() : "用户申请退款";
+                    boolean refundOk = alipayService.refund(tradeNo, refund.getRefundAmount(), reason);
+                    if (!refundOk) {
+                        log.error("支付宝退款失败，事务回滚 refundId={}, tradeNo={}", refundId, tradeNo);
+                        throw new RuntimeException("支付宝退款失败，请联系管理员");
+                    }
+                } else {
+                    log.warn("订单无支付宝交易号，跳过实际退款（模拟支付退款）orderId={}", order.getId());
+                }
 
-            // 仅退款（未发货）完成 → 将订单状态更新为 4（已售后）
-            if (refund.getType() == 1) {
-                Order order = orderService.getById(refund.getOrderId());
-                if (order != null && order.getStatus() == 1) {
+                // 更新订单状态为"已售后"
+                if (refund.getType() == 1) {
+                    if (order.getStatus() == 1) {
+                        order.setStatus(4);
+                        orderService.updateById(order);
+                    }
+                } else {
+                    // 退货退款：订单已发货/已完成，同样标记为已售后
                     order.setStatus(4);
                     orderService.updateById(order);
                 }
             }
+
+            refund.setStatus(4); // 已退款
+            refund.setRefundTime(LocalDateTime.now());
         } else {
             refund.setStatus(5); // 审核驳回
         }
