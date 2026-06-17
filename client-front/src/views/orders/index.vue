@@ -39,7 +39,6 @@
         v-for="order in orders"
         :key="order.id"
         :order="order"
-        @pay="handlePay"
         @cancel="handleCancel"
         @ship="handleConfirm"
         @reviewed="handleReviewed"
@@ -53,7 +52,9 @@
         :page-size="pageSize"
         :total="total"
         layout="prev, pager, next"
+        :pager-count="5"
         background
+        small
         @current-change="loadOrders"
       />
     </div>
@@ -61,11 +62,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ClipboardList } from 'lucide-vue-next'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import OrderCard from '@/components/OrderCard.vue'
-import { getOrders, payOrder, cancelOrder, confirmOrder } from '@/api/order'
+import { getOrders, getOrderDetail, cancelOrder, confirmOrder } from '@/api/order'
+
+const POLL_KEY = 'pending_alipay_order'
+const route = useRoute()
+const router = useRouter()
 
 const currentStatus = ref(null)
 const orders = ref([])
@@ -74,6 +80,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const totalPages = ref(0)
+let pollTimer = null
 
 const statusTabs = [
   { value: null, label: '全部' },
@@ -109,18 +116,6 @@ function switchStatus(status) {
   currentStatus.value = status
   currentPage.value = 1
   loadOrders()
-}
-
-async function handlePay(order) {
-  try {
-    const res = await payOrder(order.id)
-    if (res.code === 200) {
-      ElMessage.success('支付成功')
-      loadOrders()
-    }
-  } catch (err) {
-    console.error('支付失败:', err)
-  }
 }
 
 async function handleCancel(order) {
@@ -161,11 +156,57 @@ function handleReviewed() {
   loadOrders()
 }
 
-function handleDeleteOrder() {
-  loadOrders()
+/** 轮询检查支付宝支付状态 */
+async function pollPaymentStatus() {
+  const pending = localStorage.getItem(POLL_KEY)
+  if (!pending) return
+  let count = 0
+  const maxCount = 15 // 45秒
+  pollTimer = setInterval(async () => {
+    try {
+      const { orderId } = JSON.parse(pending)
+      const res = await getOrderDetail(orderId)
+      if (res.code === 200 && res.data && res.data.status >= 1) {
+        // 支付成功
+        clearInterval(pollTimer)
+        pollTimer = null
+        localStorage.removeItem(POLL_KEY)
+        ElMessage.success('检测到支付成功！')
+        loadOrders()
+        router.replace('/payment/success?id=' + orderId)
+        return
+      }
+      count++
+      if (count >= maxCount) {
+        clearInterval(pollTimer)
+        pollTimer = null
+        localStorage.removeItem(POLL_KEY)
+      }
+    } catch { /* 忽略 */ }
+  }, 3000)
 }
 
 onMounted(() => {
   loadOrders()
+
+  // 如果是后端支付回跳（带 id 参数），清除本地轮询标记，不再跳转到支付成功页
+  if (route.query.id) {
+    localStorage.removeItem(POLL_KEY)
+    router.replace('/orders')
+    ElMessage.success('支付成功！')
+    return
+  }
+
+  // 如果有待轮询的支付订单，自动检测
+  if (localStorage.getItem(POLL_KEY)) {
+    pollPaymentStatus()
+  }
+})
+
+onUnmounted(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
 })
 </script>
