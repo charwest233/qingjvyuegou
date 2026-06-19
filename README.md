@@ -1,22 +1,197 @@
 # 🛒 悦选商城 — 全栈电商平台
 
-> Vue 3 + Spring Boot 3 + LangChain4j AI 智能导购 | 前后端分离 | 双端覆盖
+> Vue 3 + Spring Boot 3 + RabbitMQ + LangChain4j AI 智能导购 | 前后端分离 | 双端覆盖
 
 一个功能完备的 B2C 电商平台，覆盖浏览→加购→下单→支付→物流→评价的完整交易链路，并深度集成基于大语言模型的 **AI 智能导购**（流式对话 / 多模态识别与生成 / Tool Calling / RAG 语义搜索）。
 
-> **演示 GIF 预留区** — 将录制的 GIF 替换以下占位图即可展示效果
+---
 
-| AI 智能导购 | 商品浏览与搜索 | 购物车与结算 |
-|:---:|:---:|:---:|
-| ![AI导购](./docs/gifs/ai-chat.gif) | ![商品浏览](./docs/gifs/product.gif) | ![购物车](./docs/gifs/cart.gif) |
+## 🚀 快速开始
 
-| 订单管理 | 物流追踪 | ECharts 仪表盘 |
-|:---:|:---:|:---:|
-| ![订单](./docs/gifs/orders.gif) | ![物流](./docs/gifs/tracking.gif) | ![仪表盘](./docs/gifs/dashboard.gif) |
+### 环境要求
 
-| 人工客服 (WebSocket) | 优惠券抽奖 | 售后管理 |
-|:---:|:---:|:---:|
-| ![客服](./docs/gifs/customer-service.gif) | ![优惠券](./docs/gifs/coupon.gif) | ![售后](./docs/gifs/refund.gif) |
+| 工具 | 版本 | 说明 |
+|:---|:---|:---|
+| JDK | 17+ | 后端运行环境 |
+| Maven | 3.8+ | 后端依赖管理 |
+| Node.js | 18+ | 前端运行环境 |
+| MySQL | 8.0+ | 数据库，端口 3306 |
+| RabbitMQ | 3.x+ | 消息队列，端口 5672 |
+| Erlang | 25+ | RabbitMQ 依赖（安装 RabbitMQ 前先装） |
+
+### 1. 安装 RabbitMQ（Windows）
+
+```powershell
+# 步骤 1：下载并安装 Erlang（RabbitMQ 依赖）
+# https://github.com/erlang/otp/releases
+
+# 步骤 2：下载并安装 RabbitMQ
+# https://www.rabbitmq.com/docs/install-windows
+
+# 步骤 3：启动服务（管理员 PowerShell）
+net start RabbitMQ
+
+# 步骤 4：验证是否启动成功
+sc query RabbitMQ          # 查看服务状态
+netstat -ano | findstr 5672  # 检查端口监听
+
+# 步骤 5：启用管理界面
+cd "C:\Program Files\RabbitMQ Server\rabbitmq_server-3.x.x\sbin"
+rabbitmq-plugins enable rabbitmq_management
+
+# 打开管理界面：http://localhost:15672
+# 默认账号：guest / guest
+```
+
+### 2. 数据库初始化
+
+```bash
+# 在项目根目录执行
+mysql -u root -p < db_mall.sql
+mysql -u root -p < db_migration.sql
+```
+
+### 3. 配置敏感信息
+
+在 `server/src/main/resources/` 下创建 `application-dev.yml`：
+
+```yaml
+spring:
+  datasource:
+    password: 你的MySQL密码
+
+# AI 导购（必填，否则 AI 功能不可用）
+ai:
+  siliconflow:
+    api-key: your-siliconflow-api-key
+```
+
+> 获取免费 API Key：访问 [siliconflow.cn](https://siliconflow.cn) 注册即送额度。
+
+### 4. 启动后端
+
+```bash
+cd server
+mvn spring-boot:run
+```
+
+启动成功标志：`Started ServerApplication in X seconds`
+
+访问：
+- 后端 API：`http://localhost:8080`
+- 接口文档（含在线调试）：`http://localhost:8080/doc.html`
+
+### 5. 启动前端
+
+**用户端：**
+```bash
+cd client-front
+npm install
+npm run dev
+```
+访问 `http://localhost:5173`
+
+**管理后台：**
+```bash
+cd client
+npm install
+npm run dev
+```
+访问 `http://localhost:5174`（端口见 `client/vite.config.js`）
+
+### 6. 测试准备
+
+测试账号（密码 `123456`）：手机号 `13800000100`
+
+管理员账号：`admin` / `123456`
+
+### 7. 验证 RabbitMQ 订单超时功能
+
+1. 用户端下单（不支付）
+2. 打开 RabbitMQ 管理界面 → Queues → 可看到 `order.delay.queue` 中有消息
+3. 15 分钟后刷新订单页 → 订单自动变为"已取消"
+4. 后端日志：`订单已自动取消（超时未支付）`
+
+> 开发调试时可临时将 `application.yml` 中 `order.timeout-seconds` 改为 `30`（30 秒自动取消）
+
+---
+
+## 📸 项目演示
+
+将录制的 GIF 放入 `docs/gifs/` 目录，命名对应即可展示效果。gif 等宽适配屏幕。
+
+### AI 智能导购
+
+<img src="./docs/gifs/ai-chat.gif" width="100%" alt="AI导购" />
+
+### 商品浏览与搜索
+
+<img src="./docs/gifs/product.gif" width="100%" alt="商品浏览" />
+
+### 购物车与结算
+
+<img src="./docs/gifs/cart.gif" width="100%" alt="购物车" />
+
+### 订单管理
+
+<img src="./docs/gifs/orders.gif" width="100%" alt="订单管理" />
+
+### 物流追踪
+
+<img src="./docs/gifs/tracking.gif" width="100%" alt="物流追踪" />
+
+### ECharts 仪表盘
+
+<img src="./docs/gifs/dashboard.gif" width="100%" alt="仪表盘" />
+
+### 人工客服 (WebSocket)
+
+<img src="./docs/gifs/customer-service.gif" width="100%" alt="人工客服" />
+
+### 优惠券抽奖
+
+<img src="./docs/gifs/coupon.gif" width="100%" alt="优惠券" />
+
+### 售后管理
+
+<img src="./docs/gifs/refund.gif" width="100%" alt="售后管理" />
+
+---
+
+## 🎬 如何录制演示 GIF
+
+### 推荐工具：ScreenToGif
+
+1. 下载 [ScreenToGif](https://www.screentogif.com/)（Windows 免费，免安装便携版可用）
+2. 打开后点击「录像机」→ 框选浏览器窗口
+3. 点击「录制」开始，操作完功能后点「停止」
+4. 在编辑器中：
+   - **裁剪多余帧**：选中开头/结尾无用帧 → Delete
+   - **调整大小**：图像 → 调整大小 → 宽度设为 `800px` 左右（保持比例），文件不会太大
+   - **控制帧率**：编辑 → 减少帧数 → 间隔 2 帧（减小体积）
+5. 文件 → 另存为 → GIF → **20 fps / 256 色 / 2x 编码器**（质量和体积平衡）
+6. 重命名为对应文件名放入 `docs/gifs/`
+
+### 需要录制的功能
+
+| 文件名 | 功能 | 建议操作流程 |
+|:---|:---|:---|
+| `ai-chat.gif` | AI 导购 | 输入"帮我搜一下耳机"→ 等 AI 回复 → 加购操作 |
+| `product.gif` | 商品浏览 | 首页 → 分类导航 → 搜索框 → 列表筛选 → 点进详情 |
+| `cart.gif` | 购物车结算 | 加购几件 → 购物车全选/编辑数量 → 点结算 → 选地址 → 提交 |
+| `orders.gif` | 订单管理 | 订单列表 → 状态筛选 → 点支付/取消 → 确认收货 |
+| `tracking.gif` | 物流追踪 | 管理端发货 → 用户端点物流追踪 → 轨迹展示 |
+| `dashboard.gif` | 仪表盘 | 管理端登录 → 仪表盘首页 → 销售趋势/热门商品 |
+| `customer-service.gif` | 人工客服 | 用户端发消息 → 管理端打开客服页面 → 双向回复 |
+| `coupon.gif` | 优惠券 | 转盘抽奖 → 领券 → 下单时选择优惠券抵扣 |
+| `refund.gif` | 售后管理 | 用户申请退款 → 管理端审核 → 完成退款 |
+
+### 注意事项
+
+- 每个 GIF 控制在 **2–5 MB**，太大 GitHub 加载会很慢
+- 保证浏览器窗口干净，不要露出个人书签/信息
+- 可按清单全部录完后一次性放入 `docs/gifs/`
+- 录不好的画面随时重录，命名不变即可覆盖
 
 ---
 
@@ -26,6 +201,7 @@
 |:---|:---|
 | 🤖 **AI 智能导购** | SSE 流式对话 + 多模态图片识别/生成 + Tool Calling 操控购物车 + RAG 商品语义搜索 |
 | 🛍️ **完整交易链路** | 登录注册 → 商品浏览搜索 → 购物车 → 结算下单 → 支付宝支付 → 物流追踪 → 评价售后 |
+| ⏰ **订单超时取消** | RabbitMQ 延迟队列（TTL + DLX），15 分钟未支付自动取消并回补库存 |
 | 💬 **人工客服** | WebSocket 双向实时通信，用户端与管理端即时聊天，消息持久化到数据库 |
 | 🎫 **优惠券系统** | 每日抽奖领取优惠券，下单自动计算抵扣金额 |
 | 📊 **数据可视化** | ECharts 销售趋势/热门商品/订单统计仪表盘 |
@@ -61,6 +237,7 @@
 | Java | 17 | 运行环境 |
 | MyBatis Plus | 3.5.5 | ORM 持久层 |
 | MySQL | 8.0 | 关系数据库 |
+| RabbitMQ | Spring AMQP | 延迟队列：订单超时自动取消 |
 | LangChain4j | 1.15.1 | AI Agent 框架 |
 | DeepSeek V3 / Qwen3-VL / Kolors | (SiliconFlow) | 大语言模型 / 视觉模型 / 图片生成 |
 | JWT (jjwt) | 0.9.1 | 用户认证 |
@@ -101,9 +278,9 @@
 │  │     MySQL 8.0（12 张表）                               │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                              │
-│              AI 层                                           │
+│            消息队列 & AI 层                                   │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  LangChain4j → DeepSeek V3 / Qwen3-VL / Kolors        │   │
+│  │  RabbitMQ (延迟队列) · LangChain4j (AI Agent)         │   │
 │  │  @Tool (CartTool) · RAG · ChatMemory · TokenStream    │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                              │
@@ -120,10 +297,10 @@
 | 能力 | 实现方式 | 说明 |
 |:---|:---|:---|
 | **流式对话** | SSE + TokenStream | AI 回复逐字流式输出，前端 `fetch` + `ReadableStream` 逐块读取 |
-| **多模态识别** | Qwen2.5-VL 系列 | 用户上传图片 → base64 编码 → 视觉模型理解图片内容 |
+| **多模态识别** | Qwen3-VL 系列 | 用户上传图片 → base64 编码 → 视觉模型理解图片内容 |
 | **多模态生成** | Kolors 模型 | 自然语言描述 → 调用 SiliconFlow Images API → 网页直接显示生成图片 |
 | **Tool Calling** | LangChain4j @Tool | AI 自主调用 `searchProduct` / `addCart` / `selectCart` / `removeFromCart` / `clearCart` |
-| **RAG 语义搜索** | ContentRetriever | 自然语言输入 → 向量匹配 → 召回相关商品，带相似度评分和兜底推荐 |
+| **RAG 语义搜索** | ContentRetriever | 自然语言输入 → 关键词提取 + 评分排序 → 召回商品 + 兜底推荐 |
 | **对话记忆** | MessageWindowChatMemory | 每会话保留最近 20 条历史，支持上下文连续对话 |
 | **模型切换** | 前端模型选择器 | DeepSeek V3（文本）/ Qwen3-VL（视觉）/ Kolors（生图） |
 
@@ -226,7 +403,7 @@ fetch + ReadableStream 逐块读取
 | 商品 | `/api/product` | 分页列表/详情/CRUD/RAG 语义搜索 |
 | 分类 | `/api/category` | 分类树/CRUD/排序 |
 | 购物车 | `/api/cart` | 增删改查/全选/合并本地购物车 |
-| 订单 | `/api/order` | 创建/支付/发货/取消/确认/物流追踪 |
+| 订单 | `/api/order` | 创建/支付/发货/取消/确认/物流追踪/超时自动取消 |
 | 地址 | `/api/user/addresses` | 收货地址 CRUD + 默认设置 |
 | 收藏 | `/api/user/favorites` | 收藏/取消/列表/检查 |
 | 评价 | `/api/review` | 提交/商品评价/用户评价/管理 |
@@ -240,77 +417,6 @@ fetch + ReadableStream 逐块读取
 | **仪表盘** | `/api/dashboard` | 统计数据/销售趋势/热门商品 |
 
 启动后端后访问 API 文档：`http://localhost:8080/doc.html`
-
----
-
-## 🚀 本地开发
-
-### 环境要求
-
-| 工具 | 版本 |
-|:---|:---|
-| JDK | 17+ |
-| Maven | 3.8+ |
-| Node.js | 18+ |
-| MySQL | 8.0+ |
-
-### 1. 数据库初始化
-
-```bash
-# 导入基础建表脚本
-mysql -u root -p < db_mall.sql
-
-# 导入增量迁移脚本（AI对话/评价/客服/优惠券/支付/物流/售后）
-mysql -u root -p < db_migration.sql
-```
-
-### 2. 后端启动
-
-```bash
-cd server
-# 创建 application-dev.yml 配置敏感信息（API Key / 数据库密码等）
-mvn spring-boot:run
-```
-
-访问：
-- 后端 API：`http://localhost:8080`
-- API 文档：`http://localhost:8080/doc.html`
-
-### 3. 用户端前端启动
-
-```bash
-cd client-front
-npm install
-npm run dev
-```
-
-访问：`http://localhost:5173`
-
-### 4. 管理后台启动
-
-```bash
-cd client
-npm install
-npm run dev
-```
-
-访问管理端独立端口（查看 `client/vite.config.js` 配置）
-
-### 5. AI 功能配置
-
-在 `server/src/main/resources/application-dev.yml` 中配置：
-
-```yaml
-ai:
-  siliconflow:
-    api-key: your-siliconflow-api-key   # 硅基流动 API Key
-```
-
-支持的模型：
-- `deepseek-ai/DeepSeek-V3` — 纯文本对话（默认推荐）
-- `Qwen/Qwen3-VL-30B-A3B-Instruct` — 图片识别
-- `Qwen/Qwen3-VL-8B-Instruct` — 图片识别（轻量）
-- `Kwai-Kolors/Kolors` — 图片生成
 
 ---
 
@@ -340,20 +446,21 @@ ai:
 │   └── src/main/
 │       ├── java/com/char1234/
 │       │   ├── ai/             #   AI Agent (LangChain4j Tool + RAG)
-│       │   ├── config/         #   配置类 (JWT / WebSocket / AI)
+│       │   ├── config/         #   配置类 (JWT / WebSocket / AI / RabbitMQ)
 │       │   ├── controller/     #   REST 控制器 (18 个)
 │       │   ├── dto/            #   数据传输对象
 │       │   ├── entity/         #   实体类
 │       │   ├── mapper/         #   MyBatis Mapper 接口
+│       │   ├── mq/             #   RabbitMQ 延迟队列/生产者/消费者
 │       │   ├── service/        #   业务层接口 + 实现
 │       │   └── websocket/      #   WebSocket 客服端点
 │       └── resources/
 │           ├── mapper/         #   SQL XML 映射文件
 │           └── application.yml #   公共配置
+├── docs/gifs/                  # 演示 GIF 存放目录
 ├── db_mall.sql                 # 数据库建表脚本
 ├── db_migration.sql            # 增量迁移脚本
 ├── er_diagram_chen.md          # ER 图文档
-├── design-system/              # 设计系统规范
 └── README.md
 ```
 

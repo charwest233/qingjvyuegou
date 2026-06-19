@@ -49,6 +49,16 @@ spring:
     init:
       mode: never
 
+  # RabbitMQ 消息队列
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: auto
+
 # MyBatis Plus 配置
 mybatis-plus:
   configuration:
@@ -109,3 +119,7 @@ alipay:
   return-url: http://localhost:8080/api/alipay/return
   gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
   frontend-url: http://192.168.10.1:5173
+
+# 订单超时取消时间（秒），默认 15 分钟
+order:
+  timeout-seconds: 900

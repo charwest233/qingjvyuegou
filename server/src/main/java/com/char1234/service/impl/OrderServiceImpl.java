@@ -14,6 +14,7 @@ import com.char1234.mapper.OrderMapper;
 import com.char1234.mapper.OrderRefundMapper;
 import com.char1234.mapper.ProductMapper;
 import com.char1234.mapper.ProductReviewMapper;
+import com.char1234.mq.OrderTimeoutProducer;
 import com.char1234.service.CartService;
 import com.char1234.service.OrderService;
 import com.char1234.service.ProductService;
@@ -68,6 +69,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private OrderRefundMapper orderRefundMapper;
+
+    @Autowired
+    private OrderTimeoutProducer orderTimeoutProducer;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -151,6 +155,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
         } catch (Exception ignored) {
             // 购物车清除失败不影响订单
+        }
+
+        // 发送订单超时延迟消息（超时未支付自动取消）
+        try {
+            orderTimeoutProducer.sendTimeout(order.getId(), userId);
+        } catch (Exception ignored) {
+            // 发送失败不影响下单流程
         }
 
         return order;

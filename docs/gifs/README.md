@@ -1,27 +1,24 @@
-# 项目演示 GIF 存放目录
+# 📸 演示 GIF 录制清单
 
-将录制的 GIF 文件放入此目录，README 会自动展示。
+## 工具：ScreenToGif（Windows 免费）
 
-## 需要录制的 GIF（按 README 表格顺序）
+1. 下载 [ScreenToGif](https://www.screentogif.com/)（推荐便携版，免安装）
+2. 打开 → 录像机 → 框选浏览器窗口 → 录制
+3. 编辑：裁剪头尾无用帧 → 图像 → 调整大小（宽度 800px）→ 减少帧数（间隔 2 帧）
+4. 另存为 GIF：20 fps / 256 色 / 2x 编码器
 
-| 文件名 | 对应功能 | 建议内容 |
-|--------|----------|----------|
-| `ai-chat.gif` | AI 智能导购 | 流式对话 + 搜索商品 + 加购操作 |
-| `product.gif` | 商品浏览与搜索 | 首页浏览 → 搜索 → 列表筛选 → 详情 |
-| `cart.gif` | 购物车与结算 | 加购 → 购物车管理 → 结算下单 |
-| `orders.gif` | 订单管理 | 订单列表 → 查看详情 → 支付/取消 |
-| `tracking.gif` | 物流追踪 | 发货后物流轨迹动画 |
-| `dashboard.gif` | ECharts 仪表盘 | 管理后台数据可视化 |
-| `customer-service.gif` | 人工客服 | WebSocket 实时聊天 |
-| `coupon.gif` | 优惠券抽奖 | 转盘抽奖 → 领券 → 下单抵扣 |
-| `refund.gif` | 售后管理 | 申请退款 → 审核 → 完成 |
+## 录制清单
 
-## 录制工具建议
+按此顺序逐个录制，每个 GIF 控制 **2–5 MB** 以内：
 
-- [ScreenToGif](https://www.screentogif.com/) (Windows 免费)
-- [GIPHY Capture](https://giphy.com/apps/giphycapture) (Mac 免费)
-- [LICEcap](https://www.cockos.com/licecap/) (跨平台免费)
-
-## 替换方法
-
-将录制好的 GIF 按上表重命名后放入 `docs/gifs/` 即可，README 中的占位图会自动更新。
+| # | 文件名 | 功能 | 操作 |
+|---|--------|------|------|
+| 1 | `ai-chat.gif` | AI 导购 | 输入"帮我搜一下耳机"→ AI 流式回复 → 加购 |
+| 2 | `product.gif` | 商品浏览 | 首页 → 分类切换 → 搜索 → 列表筛选 → 详情 |
+| 3 | `cart.gif` | 购物车结算 | 加购 2 件 → 全选 → 编辑数量 → 点结算 → 选地址 → 提交订单 |
+| 4 | `orders.gif` | 订单管理 | 订单列表 → 支付一笔 → 取消一笔 → 确认收货 |
+| 5 | `tracking.gif` | 物流追踪 | 管理端发货 → 用户端追踪页面 → 轨迹动画 |
+| 6 | `dashboard.gif` | 仪表盘 | 管理端登录 → 仪表盘首页 → 各图表演示 |
+| 7 | `customer-service.gif` | 人工客服 | 用户端发起 → 管理端接入 → 双向对话 |
+| 8 | `coupon.gif` | 优惠券 | 转盘抽奖 → 领券 → 下单选券 → 价格抵扣 |
+| 9 | `refund.gif` | 售后管理 | 申请退款 → 填写理由 → 管理端审核 → 完成 |
