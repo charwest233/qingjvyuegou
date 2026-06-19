@@ -69,6 +69,7 @@
           v-if="total > size"
           background
           layout="prev, pager, next"
+          :pager-count="5"
           :total="total"
           :page-size="size"
           :current-page="page"

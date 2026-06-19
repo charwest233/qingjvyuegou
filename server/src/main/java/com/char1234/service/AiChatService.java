@@ -32,5 +32,5 @@ public interface AiChatService {
     /**
      * SSE 流式聊天
      */
-    void streamChat(Long userId, Long sessionId, String text, MultipartFile image, SseEmitter emitter);
+    void streamChat(Long userId, Long sessionId, String text, String model, MultipartFile image, SseEmitter emitter);
 }

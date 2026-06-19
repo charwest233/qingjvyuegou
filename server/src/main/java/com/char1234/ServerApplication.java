@@ -1,5 +1,6 @@
 package com.char1234;
 
+import com.char1234.config.AlipayProperties;
 import com.char1234.config.WechatMiniappProperties;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -10,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @MapperScan("com.char1234.mapper")
-@EnableConfigurationProperties(WechatMiniappProperties.class)
+@EnableConfigurationProperties({WechatMiniappProperties.class, AlipayProperties.class})
 @EnableScheduling
 @EnableAsync
 public class ServerApplication {

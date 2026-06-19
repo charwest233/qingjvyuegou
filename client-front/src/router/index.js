@@ -109,6 +109,19 @@ const routes = [
     component: () => import('@/views/customer-service/ChatService.vue'),
     meta: { title: '人工客服', requiresAuth: true }
   },
+  // 支付相关
+  {
+    path: '/payment/:id',
+    name: 'Payment',
+    component: () => import('@/views/payment/index.vue'),
+    meta: { title: '支付宝支付', requiresAuth: true }
+  },
+  {
+    path: '/payment/success',
+    name: 'PaymentSuccess',
+    component: () => import('@/views/payment/success.vue'),
+    meta: { title: '支付成功', requiresAuth: true }
+  },
   // 售后相关
   {
     path: '/orders/refund/apply/:orderId',

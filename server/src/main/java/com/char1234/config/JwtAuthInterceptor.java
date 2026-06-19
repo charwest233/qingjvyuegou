@@ -97,7 +97,17 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
             return true;
         }
         // 评价公开 GET 接口：查看商品评价
-        return path.matches("^/api/review/product/\\d+$");
+        if (path.matches("^/api/review/product/\\d+$")) {
+            return true;
+        }
+        // 支付宝通知/回调（无需登录）
+        if ("GET".equals(method) && "/api/alipay/return".equals(path)) {
+            return true;
+        }
+        if ("POST".equals(method) && "/api/alipay/notify".equals(path)) {
+            return true;
+        }
+        return false;
     }
 
     private static boolean authorize(String path, String method, JwtPrincipalType pt) {
@@ -186,7 +196,7 @@ public class JwtAuthInterceptor implements HandlerInterceptor {
                 if ("DELETE".equals(method) && path.matches("^/api/order/\\d+$")) {
                     return true;
                 }
-                return path.matches("^/api/order/\\d+/pay$") || path.matches("^/api/order/\\d+/cancel$") || path.matches("^/api/order/\\d+/confirm$") || path.matches("^/api/order/\\d+/tracking$");
+                return path.matches("^/api/order/\\d+/pay$") || path.matches("^/api/order/\\d+/createPay$") || path.matches("^/api/order/\\d+/cancel$") || path.matches("^/api/order/\\d+/confirm$") || path.matches("^/api/order/\\d+/tracking$");
             }
 
             if (path.startsWith("/api/customer-service")) {

@@ -76,6 +76,35 @@
   background: #14B8A6;
 }
 
+/* ===================== 分页响应式（移动端缩小） ===================== */
+@media (max-width: 640px) {
+  .el-pagination {
+    --el-pagination-button-width: 26px;
+    --el-pagination-button-height: 26px;
+    font-size: 11px;
+    gap: 2px;
+    flex-wrap: nowrap;
+  }
+  .el-pagination .el-pager li {
+    min-width: 26px;
+    height: 26px;
+    font-size: 11px;
+    line-height: 26px;
+  }
+  .el-pagination button {
+    min-width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+  .el-pagination .el-pagination__total {
+    font-size: 11px;
+    margin-right: 4px;
+  }
+  .el-pagination .el-pager {
+    gap: 1px;
+  }
+}
+
 /* Smooth page transitions */
 .page-enter-active,
 .page-leave-active {

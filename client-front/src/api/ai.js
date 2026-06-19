@@ -39,10 +39,11 @@ export function listMessages(sessionId) {
  * SSE 流式聊天 - 使用原生 fetch 读取流
  * 返回 { abort, streamPromise }
  */
-export function streamChat(sessionId, text, image) {
+export function streamChat(sessionId, text, image, model) {
   const controller = new AbortController()
   const formData = new FormData()
   formData.append('text', text)
+  formData.append('model', model || '')
   if (image) {
     formData.append('image', image)
   }

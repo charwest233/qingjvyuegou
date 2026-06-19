@@ -35,6 +35,16 @@ public interface OrderService extends IService<Order> {
     boolean payOrder(Long id);
 
     /**
+     * 确认支付宝支付成功（只更新 status=1 + 销量）
+     */
+    boolean confirmAlipayPayment(Long id, String payNo);
+
+    /**
+     * 异步通知补全 payNo / payTime
+     */
+    boolean updatePayDetails(Long id, String payNo);
+
+    /**
      * 发货
      */
     boolean shipOrder(Long id, String company, String trackingNo);

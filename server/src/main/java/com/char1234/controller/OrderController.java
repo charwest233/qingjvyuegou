@@ -8,6 +8,7 @@ import com.char1234.entity.Order;
 import com.char1234.entity.TrackingDTO;
 import com.char1234.entity.UserCoupon;
 import com.char1234.mapper.UserCouponMapper;
+import com.char1234.service.AlipayService;
 import com.char1234.service.CouponService;
 import com.char1234.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ public class OrderController {
 
     @Autowired
     private UserCouponMapper userCouponMapper;
+
+    @Autowired
+    private AlipayService alipayService;
 
     @GetMapping("/list")
     public Result<Map<String, Object>> list(
@@ -129,6 +133,29 @@ public class OrderController {
             return Result.error("支付失败");
         }
         return Result.success(true);
+    }
+
+    /**
+     * 创建支付宝支付，返回跳转表单 HTML
+     */
+    @PostMapping("/{id}/createPay")
+    public Result<String> createPay(@PathVariable Long id) {
+        Order order = orderService.getById(id);
+        if (order == null) {
+            return Result.error("订单不存在");
+        }
+        if (!canAccessOrder(order, JwtContextHolder.get())) {
+            return Result.error(403, "无权限支付该订单");
+        }
+        if (order.getStatus() != 0) {
+            return Result.error("订单状态不正确，无法支付");
+        }
+        try {
+            String form = alipayService.createTrade(order);
+            return Result.success(form);
+        } catch (Exception e) {
+            return Result.error("创建支付失败: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/ship")

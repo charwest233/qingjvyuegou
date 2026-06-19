@@ -84,7 +84,9 @@
           :page-size="pageSize"
           :total="total"
           layout="total, prev, pager, next"
+          :pager-count="5"
           background
+          small
           @current-change="loadProducts"
         />
       </div>

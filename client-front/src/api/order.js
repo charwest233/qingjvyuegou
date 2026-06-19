@@ -20,6 +20,11 @@ export function payOrder(id) {
   return request.put(`/order/${id}/pay`)
 }
 
+// 创建支付宝支付，返回支付表单HTML
+export function createAlipayPay(id) {
+  return request.post(`/order/${id}/createPay`)
+}
+
 // 取消订单
 export function cancelOrder(id) {
   return request.put(`/order/${id}/cancel`)

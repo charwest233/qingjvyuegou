@@ -108,7 +108,7 @@
         <button
           v-if="Number(order.status) === 0"
           class="btn-primary text-sm !px-4 !py-1.5"
-          @click="$emit('pay', order)"
+          @click="handlePay"
         >
           立即支付
         </button>
@@ -157,9 +157,14 @@ const props = defineProps({
 })
 
 const router = useRouter()
-const emit = defineEmits(['pay', 'cancel', 'ship', 'reviewed', 'delete'])
+const emit = defineEmits(['cancel', 'ship', 'reviewed', 'delete'])
 
 const showReview = ref(false)
+
+/** 跳转到支付宝支付页面 */
+function handlePay() {
+  router.push(`/payment/${props.order.id}`)
+}
 const allReviewed = ref(false)
 
 // 倒计时：15分钟（与后端自动取消时间一致）

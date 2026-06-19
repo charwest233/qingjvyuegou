@@ -37,6 +37,21 @@ public class AiConfig {
      */
     private final Map<Object, ChatMemory> memoryCache = new ConcurrentHashMap<>();
 
+    /**
+     * 创建指定模型的流式聊天实例（支持动态选择模型）
+     */
+    public OpenAiStreamingChatModel createStreamingModel(String modelName) {
+        boolean isVision = modelName != null && modelName.toUpperCase().contains("VL");
+        return OpenAiStreamingChatModel.builder()
+                .baseUrl(baseUrl)
+                .apiKey(apiKey)
+                .modelName(modelName)
+                .temperature(0.7)
+                .maxTokens(isVision ? 4096 : 2048)
+                .timeout(Duration.ofSeconds(120))
+                .build();
+    }
+
     @Bean
     public OpenAiChatModel chatModel() {
         return OpenAiChatModel.builder()
@@ -88,5 +103,13 @@ public class AiConfig {
                 .contentRetriever(contentRetriever)
                 .tools(cartTool)
                 .build();
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public String getApiKey() {
+        return apiKey;
     }
 }

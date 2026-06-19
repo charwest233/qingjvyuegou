@@ -95,7 +95,10 @@
                 @click="previewImage(msg.imageUrl)"
               />
               <!-- AI 回复支持 Markdown 渲染 -->
-              <div v-if="msg.role === 'assistant'" class="ai-markdown" v-html="renderMarkdown(msg.content)" />
+              <div v-if="msg.role === 'assistant'" class="ai-markdown">
+                <div v-if="msg.content && isStreaming && index === messages.length - 1" class="streaming-text">{{ msg.content }}<span class="typing-cursor">|</span></div>
+                <div v-else-if="msg.content" v-html="renderMarkdown(msg.content)" />
+              </div>
               <div v-else>{{ msg.content }}</div>
               <!-- 打字光标 -->
               <span
@@ -457,7 +460,7 @@ async function handleSend() {
 
   // 发起 SSE 流式请求
   try {
-    const { streamPromise, abort } = streamChat(currentSessionId.value, text, imageFile)
+    const { streamPromise, abort } = streamChat(currentSessionId.value, text, imageFile, currentModel.value)
     abortController = abort
 
     const response = await streamPromise
@@ -486,9 +489,7 @@ async function handleSend() {
           const data = line.startsWith('data: ') ? line.substring(6) : line.substring(5)
           if (currentEvent === 'message') {
             aiMsg.content += data
-            // 替换数组引用触发深层响应更新
-            messages.value = [...messages.value]
-            scrollToBottomThrottled()
+            scheduleRender()
           } else if (currentEvent === 'done') {
             // 流结束
           } else if (currentEvent === 'error') {
@@ -510,6 +511,8 @@ async function handleSend() {
     isStreaming.value = false
     abortController = null
     streamReader = null
+    // 流结束后一次性渲染 Markdown
+    messages.value = [...messages.value]
     scrollToBottom()
   }
 }
@@ -536,6 +539,8 @@ function renderMarkdown(text) {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     // 斜体 *text*
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // 图片 ![alt](url)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="max-w-full max-h-64 rounded-lg my-2 object-cover cursor-pointer" onclick="event.target.requestFullscreen()" />')
     // 行内代码 `code`
     .replace(/`(.+?)`/g, '<code class="inline-code">$1</code>')
     // 标题 ### text
@@ -575,6 +580,19 @@ function scrollToBottomThrottled() {
   if (now - lastScrollTime > 60) {
     lastScrollTime = now
     scrollToBottom()
+  }
+}
+
+// 流式渲染防抖：使用 requestAnimationFrame 合并多次更新为一次
+let renderPending = false
+function scheduleRender() {
+  if (!renderPending) {
+    renderPending = true
+    requestAnimationFrame(() => {
+      messages.value = [...messages.value]
+      scrollToBottom()
+      renderPending = false
+    })
   }
 }
 
@@ -701,5 +719,22 @@ onMounted(async () => {
   left: -14px;
   color: #14B8A6;
   font-weight: 700;
+}
+
+/* 流式输出的纯文本样式 */
+.streaming-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+.typing-cursor {
+  display: inline-block;
+  color: #14B8A6;
+  font-weight: bold;
+  animation: blink-cursor 0.8s step-end infinite;
+  margin-left: 2px;
+}
+@keyframes blink-cursor {
+  50% { opacity: 0; }
 }
 </style>

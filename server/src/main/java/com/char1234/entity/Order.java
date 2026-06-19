@@ -31,6 +31,12 @@ public class Order {
      */
     private Integer status;
 
+    /** 支付宝交易号 */
+    private String payNo;
+
+    /** 支付时间 */
+    private LocalDateTime payTime;
+
     /**
      * 下单时选用的地址表主键（可空）
      */

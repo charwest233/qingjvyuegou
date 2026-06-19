@@ -27,11 +27,11 @@ public class AiChatController {
         List<Map<String, String>> models = Arrays.asList(
                 // DeepSeek 系列（默认推荐）
                 modelItem("deepseek-ai/DeepSeek-V3", "DeepSeek V3（推荐）"),
-                modelItem("deepseek-ai/DeepSeek-V2.5", "DeepSeek V2.5（免费）"),
-                // 支持图片的模型
-                modelItem("Qwen/Qwen2.5-VL-7B-Instruct", "Qwen2.5-VL（支持图片）"),
-                // 其他可选
-                modelItem("Qwen/Qwen2.5-7B-Instruct", "通义千问2.5-7B（免费）")
+                // 支持图片的视觉模型
+                modelItem("Qwen/Qwen3-VL-30B-A3B-Instruct", "Qwen3-VL-30B（支持图片识别）"),
+                modelItem("Qwen/Qwen3-VL-8B-Instruct", "Qwen3-VL-8B（支持图片识别）"),
+                // 图片生成模型（免费）
+                modelItem("Kwai-Kolors/Kolors", "Kolors 图片生成（免费）")
         );
         return Result.success(models);
     }
@@ -83,10 +83,11 @@ public class AiChatController {
     public SseEmitter chat(
             @PathVariable Long sessionId,
             @RequestParam("text") String text,
+            @RequestParam(value = "model", required = false, defaultValue = "") String model,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         Long userId = JwtContextHolder.get().principalId();
         SseEmitter emitter = new SseEmitter(180_000L);
-        aiChatService.streamChat(userId, sessionId, text, image, emitter);
+        aiChatService.streamChat(userId, sessionId, text, model, image, emitter);
         return emitter;
     }
 
