@@ -122,39 +122,19 @@ npm run dev
 
 ### AI 智能导购
 
-<img src="./docs/gifs/ai-chat.gif" width="100%" alt="AI导购" />
+<img src="./docs/gifs/AI智能购物助手.gif" width="100%" alt="AI导购" />
 
-### 商品浏览与搜索
+### 用户端购物流程
 
-<img src="./docs/gifs/product.gif" width="100%" alt="商品浏览" />
+<img src="./docs/gifs/前端购物流程整体展示.gif" width="100%" alt="用户端购物" />
 
-### 购物车与结算
+### 管理后台
 
-<img src="./docs/gifs/cart.gif" width="100%" alt="购物车" />
+<img src="./docs/gifs/管理端整体展示.gif" width="100%" alt="管理后台" />
 
-### 订单管理
+### WebSocket / 优惠券 / 物流
 
-<img src="./docs/gifs/orders.gif" width="100%" alt="订单管理" />
-
-### 物流追踪
-
-<img src="./docs/gifs/tracking.gif" width="100%" alt="物流追踪" />
-
-### ECharts 仪表盘
-
-<img src="./docs/gifs/dashboard.gif" width="100%" alt="仪表盘" />
-
-### 人工客服 (WebSocket)
-
-<img src="./docs/gifs/customer-service.gif" width="100%" alt="人工客服" />
-
-### 优惠券抽奖
-
-<img src="./docs/gifs/coupon.gif" width="100%" alt="优惠券" />
-
-### 售后管理
-
-<img src="./docs/gifs/refund.gif" width="100%" alt="售后管理" />
+<img src="./docs/gifs/Websocket，优惠券，物流API模拟演示.gif" width="100%" alt="WebSocket客服优惠券物流" />
 
 ---
 
@@ -172,14 +152,20 @@ npm run dev
 5. 文件 → 另存为 → GIF → **20 fps / 256 色 / 2x 编码器**（质量和体积平衡）
 6. 重命名为对应文件名放入 `docs/gifs/`
 
-### 需要录制的功能
+### 建议录制
 
 | 文件名 | 功能 | 建议操作流程 |
 |:---|:---|:---|
-| `ai-chat.gif` | AI 导购 | 输入"帮我搜一下耳机"→ 等 AI 回复 → 加购操作 |
-| `product.gif` | 商品浏览 | 首页 → 分类导航 → 搜索框 → 列表筛选 → 点进详情 |
-| `cart.gif` | 购物车结算 | 加购几件 → 购物车全选/编辑数量 → 点结算 → 选地址 → 提交 |
-| `orders.gif` | 订单管理 | 订单列表 → 状态筛选 → 点支付/取消 → 确认收货 |
+| `AI智能购物助手.gif` | AI 导购 | 输入"帮我搜一下耳机"→ 等 AI 回复 → 加购操作 |
+| `前端购物流程整体展示.gif` | 购物全流程 | 首页浏览 → 商品详情 → 加购 → 结算 → 支付 |
+| `管理端整体展示.gif` | 管理后台 | 仪表盘 → 商品管理 → 订单管理 → 用户管理 |
+| `Websocket，优惠券，物流API模拟演示.gif` | 客服/优惠券/物流 | 用户端发消息 → 管理端回复 → 抽奖领券 → 物流追踪 |
+
+### 注意事项
+
+- 每个 GIF 控制在 **2–5 MB**，太大 GitHub 加载会很慢
+- 保证浏览器窗口干净，不要露出个人书签/信息
+- 录完一次性放入 `docs/gifs/`
 | `tracking.gif` | 物流追踪 | 管理端发货 → 用户端点物流追踪 → 轨迹展示 |
 | `dashboard.gif` | 仪表盘 | 管理端登录 → 仪表盘首页 → 销售趋势/热门商品 |
 | `customer-service.gif` | 人工客服 | 用户端发消息 → 管理端打开客服页面 → 双向回复 |
