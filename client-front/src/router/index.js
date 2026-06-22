@@ -161,7 +161,7 @@ const router = createRouter({
 
 // 路由守卫 - 检查登录状态
 router.beforeEach((to, from, next) => {
-  document.title = `${to.meta.title} - 悦选商城`
+  document.title = `${to.meta.title} - 青桔悦购`
   const token = localStorage.getItem('token')
   if (to.meta.requiresAuth && !token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })

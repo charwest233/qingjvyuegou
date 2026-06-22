@@ -39,10 +39,7 @@ export const productApi = {
   uploadImage(file) {
     const formData = new FormData()
     formData.append('file', file)
-    return request.post('/upload/image', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+    // 不手动设置 Content-Type，让 axios 自动添加 boundary 参数
+    return request.post('/upload/image', formData)
   }
 }

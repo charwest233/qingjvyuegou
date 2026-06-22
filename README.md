@@ -1,4 +1,4 @@
-# 🛒 悦选商城 — 全栈电商平台
+# 🛒 青桔悦购 — 全栈电商平台
 
 > Vue 3 + Spring Boot 3 + RabbitMQ + LangChain4j AI 智能导购 | 前后端分离 | 双端覆盖
 

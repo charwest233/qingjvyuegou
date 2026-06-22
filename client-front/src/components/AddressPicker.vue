@@ -62,6 +62,7 @@
         <el-cascader
           v-model="newAddress.region"
           :options="regionOptions"
+          :props="{ value: 'label', label: 'label' }"
           placeholder="请选择省/市/区"
           class="w-full"
         />
@@ -90,8 +91,10 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { Plus, CheckCircle } from 'lucide-vue-next'
+import { ElMessage } from 'element-plus'
 import { maskPhone } from '@/utils/format'
 import { getUserAddresses, addUserAddress } from '@/api/user'
+import { regionData } from 'element-china-area-data'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false }
@@ -112,27 +115,8 @@ const newAddress = ref({
   isDefault: false
 })
 
-// 简化地区选项（实际应从 API 获取）
-const regionOptions = [
-  {
-    value: '北京市',
-    label: '北京市',
-    children: [{ value: '朝阳区', label: '朝阳区' }, { value: '海淀区', label: '海淀区' }]
-  },
-  {
-    value: '上海市',
-    label: '上海市',
-    children: [{ value: '浦东新区', label: '浦东新区' }, { value: '徐汇区', label: '徐汇区' }]
-  },
-  {
-    value: '广东省',
-    label: '广东省',
-    children: [{
-      value: '广州市', label: '广州市',
-      children: [{ value: '天河区', label: '天河区' }, { value: '越秀区', label: '越秀区' }]
-    }]
-  }
-]
+// 使用 element-china-area-data 提供的完整全国省市区数据
+const regionOptions = regionData
 
 watch(() => props.modelValue, (val) => {
   visible.value = val

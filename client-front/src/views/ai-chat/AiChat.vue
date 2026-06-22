@@ -12,7 +12,7 @@
           </div>
           <div>
             <h1 class="text-sm font-heading font-semibold text-text-primary">AI导购</h1>
-            <p class="text-xs text-text-secondary">悦选智能助手</p>
+            <p class="text-xs text-text-secondary">青桔悦购智能助手</p>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
         <div class="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center mb-6 animate-float">
           <Bot class="w-12 h-12 text-primary" />
         </div>
-        <h2 class="text-xl font-heading font-semibold text-text-primary mb-2">嗨，我是悦选导购！</h2>
+        <h2 class="text-xl font-heading font-semibold text-text-primary mb-2">嗨，我是青桔悦购导购！</h2>
         <p class="text-sm text-text-secondary max-w-xs mb-8">我可以帮你推荐商品、对比产品、解答购物疑问</p>
         <div class="grid grid-cols-1 gap-3 w-full max-w-sm">
           <button

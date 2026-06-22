@@ -20,9 +20,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Value("${file.upload-dir:uploads}")
     private String uploadDir;
 
-    /**
-     * 跨域配置
-     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

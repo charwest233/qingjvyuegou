@@ -46,7 +46,7 @@
         <div class="p-4 pb-0">
           <div class="flex items-center gap-2">
             <MapPin class="w-4 h-4 text-primary" />
-            <span class="text-sm font-medium text-text-primary">悦选商城 · 全国物流网络</span>
+            <span class="text-sm font-medium text-text-primary">青桔悦购 · 全国物流网络</span>
           </div>
           <p class="text-xs text-text-secondary mt-1">高德地图 API 集成展示</p>
         </div>

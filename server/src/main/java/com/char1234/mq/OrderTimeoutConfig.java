@@ -1,8 +1,13 @@
 package com.char1234.mq;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,10 +26,17 @@ import java.util.Map;
 public class OrderTimeoutConfig {
 
     public static final String DELAY_QUEUE = "order.delay.queue";
+    public static final String DELAY_EXCHANGE = "order.delay.exchange";
     public static final String DEAD_LETTER_EXCHANGE = "order.timeout.exchange";
     public static final String TIMEOUT_QUEUE = "order.timeout.queue";
 
-    /** 死信交换机 */
+    /** 延迟交换机（消息先发到这里） */
+    @Bean
+    public DirectExchange orderDelayExchange() {
+        return new DirectExchange(DELAY_EXCHANGE);
+    }
+
+    /** 死信交换机（TTL 过期后路由到这里） */
     @Bean
     public DirectExchange orderTimeoutExchange() {
         return new DirectExchange(DEAD_LETTER_EXCHANGE);
@@ -35,12 +47,13 @@ public class OrderTimeoutConfig {
      * TTL 时间从配置文件 order.timeout-seconds 读取（默认 900s = 15min）
      */
     @Bean
-    public Queue orderDelayQueue(org.springframework.core.env.Environment env) {
+    @DependsOn("orderTimeoutExchange")
+    public Queue orderDelayQueue(Environment env) {
         int ttlSeconds = Integer.parseInt(
                 env.getProperty("order.timeout-seconds", "900"));
         Map<String, Object> args = new HashMap<>();
         args.put("x-dead-letter-exchange", DEAD_LETTER_EXCHANGE);
-        args.put("x-dead-letter-routing-key", TIMEOUT_QUEUE);
+        args.put("x-dead-letter-routing-key", "timeout");
         args.put("x-message-ttl", ttlSeconds * 1000L);
         return new Queue(DELAY_QUEUE, true, false, false, args);
     }
@@ -51,11 +64,33 @@ public class OrderTimeoutConfig {
         return new Queue(TIMEOUT_QUEUE, true);
     }
 
-    /** 绑定死信队列到交换机 */
+    /** 绑定延迟队列到延迟交换机 */
+    @Bean
+    public Binding orderDelayBinding(Queue orderDelayQueue) {
+        return BindingBuilder.bind(orderDelayQueue)
+                .to(orderDelayExchange())
+                .with("delay");
+    }
+
+    /** 绑定死信队列到死信交换机 */
     @Bean
     public Binding orderTimeoutBinding() {
         return BindingBuilder.bind(orderTimeoutQueue())
                 .to(orderTimeoutExchange())
-                .with(TIMEOUT_QUEUE);
+                .with("timeout");
+    }
+
+    /** JSON 序列化，替代 Java 默认序列化（Spring Boot 3.x 安全要求） */
+    @Bean
+    public Jackson2JsonMessageConverter messageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    /** RabbitTemplate 使用 JSON 序列化 */
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(messageConverter());
+        return template;
     }
 }

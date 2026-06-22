@@ -64,7 +64,7 @@ public class AlipayService {
                 "{\"out_trade_no\":\"%s\",\"total_amount\":\"%s\",\"subject\":\"%s\",\"product_code\":\"FAST_INSTANT_TRADE_PAY\"}",
                 order.getOrderNo(),
                 order.getTotalAmount().setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
-                "悦选商城 - 订单 " + order.getOrderNo()
+                "青桔悦购 - 订单 " + order.getOrderNo()
         );
         request.setBizContent(bizContent);
 

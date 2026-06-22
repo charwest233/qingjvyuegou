@@ -21,7 +21,10 @@ public class OrderTimeoutProducer {
      */
     public void sendTimeout(Long orderId, Long userId) {
         OrderTimeoutMessage msg = new OrderTimeoutMessage(orderId, userId);
-        rabbitTemplate.convertAndSend(OrderTimeoutConfig.DELAY_QUEUE, msg);
+        rabbitTemplate.convertAndSend(
+                OrderTimeoutConfig.DELAY_EXCHANGE,
+                "delay",
+                msg);
         log.info("订单超时消息已发送: orderId={}, userId={}", orderId, userId);
     }
 }

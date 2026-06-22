@@ -11,7 +11,7 @@
             <div class="w-10 h-10 rounded-xl bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <ShoppingBag class="w-5 h-5 text-primary" />
             </div>
-            <span>悦选商城</span>
+            <span>青桔悦购</span>
           </div>
         </div>
 
@@ -196,7 +196,7 @@
             <div class="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary to-primary-light rounded-xl mb-3 shadow-lg">
               <ShoppingBag class="w-7 h-7 text-white" />
             </div>
-            <h1 class="text-2xl font-heading font-bold text-gray-800">悦选商城</h1>
+            <h1 class="text-2xl font-heading font-bold text-gray-800">青桔悦购</h1>
             <p class="text-gray-500 text-sm mt-1">精选好物，品质生活</p>
           </div>
 

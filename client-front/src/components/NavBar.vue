@@ -6,7 +6,7 @@
         <div class="w-8 h-8 bg-gradient-to-br from-primary to-primary-light rounded-lg flex items-center justify-center">
           <ShoppingBag class="w-5 h-5 text-white" />
         </div>
-        <span class="text-xl font-heading font-bold text-primary">悦选商城</span>
+        <span class="text-xl font-heading font-bold text-primary">青桔悦购</span>
       </router-link>
 
       <!-- 搜索框 -->

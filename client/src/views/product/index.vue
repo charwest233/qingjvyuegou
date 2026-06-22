@@ -463,21 +463,35 @@ const handleDelete = (row) => {
   })
 }
 
-// 图片上传
+// 图片压缩 + 预览（直接存压缩后的 base64，不上传文件）
 const handleImageChange = (file) => {
-  // 预览本地图片
+  if (!file.raw) return
+  
   const reader = new FileReader()
   reader.onload = (e) => {
-    formData.value.mainImage = e.target.result
+    // 用 canvas 压缩图片后再转 base64，避免尺寸过大
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const maxW = 800
+      const maxH = 800
+      let w = img.width
+      let h = img.height
+      if (w > maxW || h > maxH) {
+        if (w > h) { h = h * maxW / w; w = maxW }
+        else { w = w * maxH / h; h = maxH }
+      }
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, w, h)
+      // 质量 0.6，大幅压缩
+      formData.value.mainImage = canvas.toDataURL('image/jpeg', 0.6)
+      ElMessage.success('图片已就绪')
+    }
+    img.src = e.target.result
   }
   reader.readAsDataURL(file.raw)
-  
-  // 实际项目中这里应该上传图片到服务器
-  // const formData = new FormData()
-  // formData.append('file', file.raw)
-  // productApi.uploadImage(file.raw).then(res => {
-  //   formData.value.mainImage = res.url
-  // })
 }
 
 // 提交表单
