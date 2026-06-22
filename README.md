@@ -122,19 +122,19 @@ npm run dev
 
 ### AI 智能导购
 
-<img src="./docs/gifs/AI智能购物助手.gif" width="100%" alt="AI导购" />
+<img src="./docs/gifs/ai-chat.gif" width="100%" alt="AI导购" />
 
 ### 用户端购物流程
 
-<img src="./docs/gifs/前端购物流程整体展示.gif" width="100%" alt="用户端购物" />
+<img src="./docs/gifs/shopping.gif" width="100%" alt="用户端购物" />
 
 ### 管理后台
 
-<img src="./docs/gifs/管理端整体展示.gif" width="100%" alt="管理后台" />
+<img src="./docs/gifs/admin.gif" width="100%" alt="管理后台" />
 
 ### WebSocket / 优惠券 / 物流
 
-<img src="./docs/gifs/Websocket，优惠券，物流API模拟演示.gif" width="100%" alt="WebSocket客服优惠券物流" />
+<img src="./docs/gifs/features.gif" width="100%" alt="WebSocket客服优惠券物流" />
 
 ---
 
@@ -156,10 +156,10 @@ npm run dev
 
 | 文件名 | 功能 | 建议操作流程 |
 |:---|:---|:---|
-| `AI智能购物助手.gif` | AI 导购 | 输入"帮我搜一下耳机"→ 等 AI 回复 → 加购操作 |
-| `前端购物流程整体展示.gif` | 购物全流程 | 首页浏览 → 商品详情 → 加购 → 结算 → 支付 |
-| `管理端整体展示.gif` | 管理后台 | 仪表盘 → 商品管理 → 订单管理 → 用户管理 |
-| `Websocket，优惠券，物流API模拟演示.gif` | 客服/优惠券/物流 | 用户端发消息 → 管理端回复 → 抽奖领券 → 物流追踪 |
+| `ai-chat.gif` | AI 导购 | 输入"帮我搜一下耳机"→ 等 AI 回复 → 加购操作 |
+| `shopping.gif` | 购物全流程 | 首页浏览 → 商品详情 → 加购 → 结算 → 支付 |
+| `admin.gif` | 管理后台 | 仪表盘 → 商品管理 → 订单管理 → 用户管理 |
+| `features.gif` | 客服/优惠券/物流 | 用户端发消息 → 管理端回复 → 抽奖领券 → 物流追踪 |
 
 ### 注意事项
 
